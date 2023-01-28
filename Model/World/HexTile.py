@@ -37,6 +37,7 @@ class HexTile:
         self.max_highlight_ticks = 15
         self.vertices = self.compute_vertices()
         self.highlight_tick = 0
+        self.site=None
 
         #Hex coordinates
         self.q = self.col
@@ -87,18 +88,22 @@ class HexTile:
         """Returns True if distance from centre to point is less than horizontal_length"""
         return math.dist(point, self.centre) < self.minimal_radius
 
-    def render(self, screen) -> None:
-        """Renders the hexagon on the screen"""
-        pygame.draw.polygon(screen, self.highlight_colour, self.vertices)
-
-    def render_highlight(self, screen, border_colour) -> None:
+    def render(self, screen, border_colour, render_highlight=False) -> None:
         """Draws a border around the hexagon with the specified colour"""
         self.highlight_tick = self.max_highlight_ticks
-        # pygame.draw.polygon(screen, self.highlight_colour, self.vertices)
-        pygame.draw.aalines(screen, border_colour, closed=True, points=self.vertices)
+        pygame.draw.polygon(screen, self.highlight_colour, self.vertices)
+
+        if render_highlight:
+            pygame.draw.aalines(screen, border_colour, closed=True, points=self.vertices)
 
     def computeDistance(self, other):
         return max(abs(self.q - other.q), abs(self.r - other.r), abs(self.s - other.s))
+
+    def setColour(self, colour):
+        self.colour = colour
+    
+    def setSite(self, site):
+        self.site=site
 
     @property
     def centre(self) -> Tuple[float, float]:
@@ -141,3 +146,5 @@ class FlatTopHexagonTile(HexTile):
         """Centre of the hexagon"""
         x, y = self.position  # pylint: disable=invalid-name
         return x, y + self.minimal_radius
+
+    

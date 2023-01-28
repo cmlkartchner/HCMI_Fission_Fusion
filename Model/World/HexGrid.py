@@ -8,8 +8,9 @@ from typing import List
 from typing import Tuple
 
 import pygame
-from Model.World.HexTile import FlatTopHexagonTile
-from Model.World.HexTile import HexTile
+from .HexTile import HexTile
+from .HexTile import FlatTopHexagonTile
+from .SiteBuilder import SiteBuilder
 
 
 # pylint: disable=no-member
@@ -21,15 +22,10 @@ class HexGrid:
         self.num_y = num_y
         self.hexagons = self.init_hexagons(flat_top=True)
 
-    def create_hexagon(self, position, row, col, radius=3, flat_top=False) -> HexTile:
+    def create_hexagon(self, position, row, col, radius=5, flat_top=False) -> HexTile:
         """Creates a hexagon tile at the specified position"""
         class_ = FlatTopHexagonTile if flat_top else HexTile
-        return class_(radius, position, row, col, colour=self.get_random_colour())
-
-
-    def get_random_colour(self, min_=0, max_=5) -> Tuple[int, ...]:
-        """Returns a random RGB colour with each component between min_ and max_"""
-        return tuple(random.choices(list(range(min_, max_)), k=3))
+        return class_(radius, position, row, col, colour=(5,5,5))
 
 
     def init_hexagons(self, flat_top=False) -> List[HexTile]:
@@ -66,6 +62,8 @@ class HexGrid:
                 hexagons[(hexagon.q, hexagon.r)] = hexagon
                 colCoord += 1
 
+        SiteBuilder.build_sites(hexagons, num_sites=40)
+
         return hexagons
 
     def getGrid(self):
@@ -78,8 +76,7 @@ class HexGrid:
         """Renders hexagons on the screen"""
 
         for hexagon in self.hexagons.values():
-            hexagon.render(screen)
-            hexagon.render_highlight(screen, border_colour=(255, 255, 255))
+            hexagon.render(screen, border_colour=(255, 255, 255),render_highlight=False)
 
         # draw borders around colliding hexagons and neighbours
         mouse_pos = pygame.mouse.get_pos()
