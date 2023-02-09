@@ -79,10 +79,10 @@ class HexGrid:
             hexagon.render(screen, border_colour=(255, 255, 255),render_highlight=False)
 
         # draw borders around colliding hexagons and neighbours
-        mouse_pos = pygame.mouse.get_pos()
-        colliding_hexagons = [
-            hexagon for hexagon in self.hexagons.values() if hexagon.collide_with_point(mouse_pos)
-        ]
+        # mouse_pos = pygame.mouse.get_pos()
+        # colliding_hexagons = [
+        #     hexagon for hexagon in self.hexagons.values() if hexagon.collide_with_point(mouse_pos)
+        # ]
 
         for hexagon in self.hexagons.values():
             hexagon.update()

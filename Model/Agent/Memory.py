@@ -1,6 +1,6 @@
 class Memory:
 
     def __init__(self, hexagons):
-        self.memory = {key:None for key in hexagons.keys()}
+        self.memory = {key:-1 for key in hexagons.keys()}
 
     

@@ -33,24 +33,32 @@ class HexTile:
         self.col = col
         self.colour = colour
 
+        #visual attributes
         self.highlight_offset = 3
         self.max_highlight_ticks = 15
-        self.vertices = self.compute_vertices()
         self.highlight_tick = 0
+
+        self.vertices = self.compute_vertices()
+        
+        # Keeping track of things situated on the tile
         self.site=None
+        self.agent=None
+        self.trail=0
 
         #Hex coordinates
         self.q = self.col
         self.r = self.row - (self.col - (self.col & 1)) / 2
         self.s = -(self.q + self.r)
 
-        self.directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
-        self.immediateNeighbors = []
+        self.immediateNeighbors = {}
 
     def update(self):
         """Updates tile highlights"""
         if self.highlight_tick > 0:
             self.highlight_tick -= 1
+        
+        if self.trail > 0:
+            self.trail -= 1
 
     def compute_vertices(self) -> List[Tuple[float, float]]:
         """Returns a list of the hexagon's vertices as x, y tuples"""
@@ -67,21 +75,22 @@ class HexTile:
             (x + minimal_radius, y + half_radius),
         ]
 
-    def get_neighbours(self, hexagons) -> List[HexTile]:
+    def get_immediate_neighbors(self, hexagons) -> List[HexTile]:
+        directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
         if self.immediateNeighbors:
             return self.immediateNeighbors
 
-        for dir in self.directions:
+        for dir in directions:
             if hexagons.get((self.q+dir[0], self.r+dir[1])):
-                self.immediateNeighbors.append(hexagons.get((self.q+dir[0], self.r+dir[1])))
+                self.immediateNeighbors[(self.q+dir[0], self.r+dir[1])] = hexagons.get((self.q+dir[0], self.r+dir[1]))
 
         return self.immediateNeighbors
 
-    def get_random_neighbour(self, hexagons) -> HexTile:
+    def get_random_neighbor(self, hexagons) -> HexTile:
         if not self.immediateNeighbors:
-            self.get_neighbours(hexagons)
+            self.get_immediate_neighbors(hexagons)
 
-        return random.choice(self.immediateNeighbors)
+        return random.choice(self.immediateNeighbors.values())
 
 
     def collide_with_point(self, point: Tuple[float, float]) -> bool:
@@ -99,11 +108,17 @@ class HexTile:
     def computeDistance(self, other):
         return max(abs(self.q - other.q), abs(self.r - other.r), abs(self.s - other.s))
 
+    #Color the hex if it's a site
     def setColour(self, colour):
         self.colour = colour
     
+    #Initialize the hex as a site
     def setSite(self, site):
         self.site=site
+
+    #If there's a site agent or trail on the tile
+    def isOfInterest(self):
+        return (self.site or self.agent or self.trail)!=False
 
     @property
     def centre(self) -> Tuple[float, float]:
