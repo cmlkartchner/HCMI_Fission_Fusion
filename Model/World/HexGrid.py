@@ -91,3 +91,99 @@ class HexGrid:
             #     neighbour.render_highlight(screen, border_colour=(100, 100, 100))
             # hexagon.render_highlight(screen, border_colour=(0, 0, 0))
         pygame.display.flip()
+
+
+    def get_immediate_neighbors(self, hex) -> List[HexTile]:
+        directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
+        
+        immediateNeighbors = {}
+        q,r= hex.q, hex.r
+
+        for dir in directions:
+            if self.hexagons.get((q+dir[0], r+dir[1])):
+                immediateNeighbors[(q+dir[0], r+dir[1])] = self.hexagons.get((q+dir[0], r+dir[1]))
+
+        return immediateNeighbors
+
+    def get_random_neighbor(self, hex) -> HexTile:
+        immediateNeighbors = self.get_immediate_neighbors(hex)
+
+        return random.choice(immediateNeighbors.values())
+
+    def get_rDistance_neighbors(self, location, radius):
+        directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
+        rDistance_neighbors = []
+
+        #get the neighbors of hex starting from the one in the immediate right and going clockwise
+        for r in range(1,radius):
+            
+            #this loop gets the neighbours that lie exactly in the six directions
+            for i in range(len(directions)):
+                x = location[0] + directions[i][0] * r
+                y = location[1] + directions[i][1] * r
+
+                if self.hexagons.get((x,y)):
+                    rDistance_neighbors.append(self.hexagons.get((x,y)))
+
+                    #this one takes care of in-betweener hexes for radius>=2
+                    for j in range(1,r):
+                        
+                        #The directions for in-betweener hexes can be obtained by offsetting the 6-directional array by 2 indices
+                        offsetIndex = (i+2)%6
+                        nx = x + directions[offsetIndex]*j
+                        ny = y + directions[offsetIndex]*j
+
+                        if self.hexagons.get((nx,ny)):
+                            rDistance_neighbors.append(self.hexagons.get((nx,ny)))
+        
+        return rDistance_neighbors
+    
+    def get_nAdjacent_cells(self, location, n):
+        directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
+        cells = []
+
+        #get the neighbors of hex starting from the one in the immediate right and going clockwise
+        num,r=0,1
+        while num<n:
+            
+            #this loop gets the neighbours that lie exactly in the six directions
+            for i in range(len(directions)):
+                x = location[0] + directions[i][0] * r
+                y = location[1] + directions[i][1] * r
+
+                if self.hexagons.get((x,y)):
+                    cells.append(self.hexagons.get((x,y)))
+                    num+=1
+                    if num==n:
+                        return cells
+
+                    #this one takes care of in-betweener hexes for radius>=2
+                    for j in range(1,r):
+                        
+                        #The directions for in-betweener hexes can be obtained by offsetting the 6-directional array by 2 indices
+                        offsetIndex = (i+2)%6
+                        nx = x + directions[offsetIndex]*j
+                        ny = y + directions[offsetIndex]*j
+
+                        if self.hexagons.get((nx,ny)):
+                            cells.append(self.hexagons.get((nx,ny)))
+                            num+=1
+                            if num==n:
+                                return cells
+            r+=1
+        
+        return cells
+
+    
+    def get_rDistance_reading(self,hex,radius,sensorReading):
+        rDistance_neighbors = self.get_rDistance_neighbors((hex.q,hex.r),radius)
+        for hex in rDistance_neighbors:
+            hexLocation=(hex.q,hex.r)
+            if hex.agents:
+                sensorReading.agents[hexLocation]=hex.agents
+            if hex.site:
+                sensorReading.sites[hexLocation]=hex.site
+            if hex.trail:
+                sensorReading.trails[hexLocation]=hex.trail
+        return sensorReading
+            

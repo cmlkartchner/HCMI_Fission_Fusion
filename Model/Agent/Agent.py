@@ -1,17 +1,16 @@
 from .State import State
-from .Memory import Memory
 
 class Agent:
-    def __init__(self, id, initial_location, hexagons, pheromone_strength=5, health=100, movement_speed=1):
+    def __init__(self, id, hex, memory, pheromone_strength=5, health=100, movement_speed=1):
         self.id = id
         self.health = health
         self.movement_speed = movement_speed
-        self.hex = initial_location
+        self.hex = hex
         
         self.state = State.GROUP
         self.max_movement_speed = self.movement_speed*2
         self.sensing_radius = 5
-        self.memory = Memory(hexagons)
+        self.memory = memory
         self.pheromone_strength = pheromone_strength
 
     #Moves the agent from one cell to a neighbor. 
@@ -23,7 +22,7 @@ class Agent:
         self.inspect()
 
         possible_moves = self.hex.get_immediate_neighbors()
-        self.hex.agent = None
+        self.hex.removeAgent(self)
         self.hex.trail += self.pheromone_strength
         
         nextHex = possible_moves.get(to)
@@ -31,8 +30,11 @@ class Agent:
     
 
     def complete_move(self, nextHex):
-        nextHex.agent=self
+        nextHex.addAgent(self)
         self.hex=nextHex
+
+    def updateReading(reading):
+        pass
 
 
     def inspect(self):

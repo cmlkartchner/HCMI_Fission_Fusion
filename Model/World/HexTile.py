@@ -42,7 +42,7 @@ class HexTile:
         
         # Keeping track of things situated on the tile
         self.site=None
-        self.agent=None
+        self.agents=set()
         self.trail=0
 
         #Hex coordinates
@@ -75,24 +75,6 @@ class HexTile:
             (x + minimal_radius, y + half_radius),
         ]
 
-    def get_immediate_neighbors(self, hexagons) -> List[HexTile]:
-        directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
-        if self.immediateNeighbors:
-            return self.immediateNeighbors
-
-        for dir in directions:
-            if hexagons.get((self.q+dir[0], self.r+dir[1])):
-                self.immediateNeighbors[(self.q+dir[0], self.r+dir[1])] = hexagons.get((self.q+dir[0], self.r+dir[1]))
-
-        return self.immediateNeighbors
-
-    def get_random_neighbor(self, hexagons) -> HexTile:
-        if not self.immediateNeighbors:
-            self.get_immediate_neighbors(hexagons)
-
-        return random.choice(self.immediateNeighbors.values())
-
-
     def collide_with_point(self, point: Tuple[float, float]) -> bool:
         """Returns True if distance from centre to point is less than horizontal_length"""
         return math.dist(point, self.centre) < self.minimal_radius
@@ -115,10 +97,12 @@ class HexTile:
     #Initialize the hex as a site
     def setSite(self, site):
         self.site=site
-
-    #If there's a site agent or trail on the tile
-    def isOfInterest(self):
-        return (self.site or self.agent or self.trail)!=False
+    
+    def addAgent(self, agent):
+        self.agents.add(agent)
+    
+    def removeAgent(self, agent):
+        self.agents.remove(agent)
 
     @property
     def centre(self) -> Tuple[float, float]:
