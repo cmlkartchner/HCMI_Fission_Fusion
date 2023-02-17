@@ -1,15 +1,17 @@
 from math import cos,sin
 
 import pygame
+from Model.AgentEngine.AgentEngine import AgentEngine
 
 from Model.World.__init__ import World
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((600, 400))
+    screen = pygame.display.set_mode((1600, 900))
     screen.fill((0, 0, 0))
     clock = pygame.time.Clock()
-    world = World(150,100)
+    world = World(340,170)
+    agentEngine = AgentEngine(2, world)
 
     terminated = False
     while not terminated:
@@ -18,6 +20,7 @@ def main():
                 terminated = True
 
         world.render(screen)
+        agentEngine.update(screen)
         clock.tick(50)
     pygame.display.quit()
 

@@ -22,10 +22,10 @@ class HexGrid:
         self.num_y = num_y
         self.hexagons = self.init_hexagons(flat_top=True)
 
-    def create_hexagon(self, position, row, col, radius=5, flat_top=False) -> HexTile:
+    def create_hexagon(self, position, row, col, radius=3, flat_top=False) -> HexTile:
         """Creates a hexagon tile at the specified position"""
         class_ = FlatTopHexagonTile if flat_top else HexTile
-        return class_(radius, position, row, col, colour=(5,5,5))
+        return class_(radius, position, row, col, colour=(0,0,0))
 
 
     def init_hexagons(self, flat_top=False) -> List[HexTile]:
@@ -62,7 +62,7 @@ class HexGrid:
                 hexagons[(hexagon.q, hexagon.r)] = hexagon
                 colCoord += 1
 
-        SiteBuilder.build_sites(hexagons, num_sites=40)
+        SiteBuilder.build_sites(hexagons, num_sites=200)
 
         return hexagons
 
@@ -76,7 +76,7 @@ class HexGrid:
         """Renders hexagons on the screen"""
 
         for hexagon in self.hexagons.values():
-            hexagon.render(screen, border_colour=(255, 255, 255),render_highlight=False)
+            hexagon.render(screen, border_colour=(5, 5, 5),render_highlight=True)
 
         # draw borders around colliding hexagons and neighbours
         # mouse_pos = pygame.mouse.get_pos()
@@ -130,8 +130,8 @@ class HexGrid:
                         
                         #The directions for in-betweener hexes can be obtained by offsetting the 6-directional array by 2 indices
                         offsetIndex = (i+2)%6
-                        nx = x + directions[offsetIndex]*j
-                        ny = y + directions[offsetIndex]*j
+                        nx = x + directions[offsetIndex][0]*j
+                        ny = y + directions[offsetIndex][1]*j
 
                         if self.hexagons.get((nx,ny)):
                             rDistance_neighbors.append(self.hexagons.get((nx,ny)))
@@ -146,7 +146,7 @@ class HexGrid:
         num,r=0,1
         while num<n:
             
-            #this loop gets the neighbours that lie exactly in the six directions
+            #this loop gets the neighbors that lie exactly in the six directions
             for i in range(len(directions)):
                 x = location[0] + directions[i][0] * r
                 y = location[1] + directions[i][1] * r
@@ -162,8 +162,8 @@ class HexGrid:
                         
                         #The directions for in-betweener hexes can be obtained by offsetting the 6-directional array by 2 indices
                         offsetIndex = (i+2)%6
-                        nx = x + directions[offsetIndex]*j
-                        ny = y + directions[offsetIndex]*j
+                        nx = x + directions[offsetIndex][0]*j
+                        ny = y + directions[offsetIndex][1]*j
 
                         if self.hexagons.get((nx,ny)):
                             cells.append(self.hexagons.get((nx,ny)))

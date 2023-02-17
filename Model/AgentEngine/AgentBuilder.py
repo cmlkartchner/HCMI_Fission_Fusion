@@ -1,7 +1,7 @@
 import random
 
 from Model.Agent.Agent import Agent
-from Model.Engine.Memory import Memory
+from Model.AgentEngine.Memory import Memory
 
 
 def build(numAgents,grid):

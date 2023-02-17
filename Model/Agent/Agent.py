@@ -6,10 +6,12 @@ class Agent:
         self.health = health
         self.movement_speed = movement_speed
         self.hex = hex
+        self.hex.setColour((128, 0, 0))
+        self.hex.addAgent(self)
         
         self.state = State.GROUP
         self.max_movement_speed = self.movement_speed*2
-        self.sensing_radius = 5
+        self.sensing_radius = 20
         self.memory = memory
         self.pheromone_strength = pheromone_strength
 
@@ -33,7 +35,7 @@ class Agent:
         nextHex.addAgent(self)
         self.hex=nextHex
 
-    def updateReading(reading):
+    def updateReading(self, reading):
         pass
 
 
