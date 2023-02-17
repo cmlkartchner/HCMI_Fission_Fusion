@@ -10,5 +10,6 @@ class AgentEngine:
     def update(self,screen):
         for agent in self.agents:
             reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
+            availableMoves = self.grid.get_immediate_neighbors(agent.hex)
             agent.updateReading(reading)
-        print(reading.agents, reading.sites, reading.trails)
+            agent.updateAvailableMoves(availableMoves)

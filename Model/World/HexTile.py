@@ -90,7 +90,9 @@ class HexTile:
     def computeDistance(self, other):
         return max(abs(self.q - other.q), abs(self.r - other.r), abs(self.s - other.s))
 
-    #Color the hex if it's a site
+    def getColour(self):
+        return self.colour
+
     def setColour(self, colour):
         self.colour = colour
     

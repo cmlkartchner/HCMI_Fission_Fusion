@@ -6,8 +6,7 @@ class Agent:
         self.health = health
         self.movement_speed = movement_speed
         self.hex = hex
-        self.hex.setColour((128, 0, 0))
-        self.hex.addAgent(self)
+        self.situate_at_hex(hex)
         
         self.state = State.GROUP
         self.max_movement_speed = self.movement_speed*2
@@ -15,30 +14,39 @@ class Agent:
         self.memory = memory
         self.pheromone_strength = pheromone_strength
 
+    
     #Moves the agent from one cell to a neighbor. 
-    #Could have the agent keep a copy of the hexgrid to get the hex associated with the position.
-    #But agent cannot know about the entire grid without exploring
-    #Therefore we need a method on an individual Hextile to find neighbors of that hex
 
-    def initiate_move(self,to):
-        self.inspect()
-
-        possible_moves = self.hex.get_immediate_neighbors()
-        self.hex.removeAgent(self)
+    def move(self,to):
+        self.remove_from_hex(self.hex)
         self.hex.trail += self.pheromone_strength
         
-        nextHex = possible_moves.get(to)
-        self.complete_move(nextHex)
+        nextHex = self.possible_moves.get(to)
+        self.situate_at_hex(nextHex)        
+
+    def situate_at_hex(self,hex):
+        self.inspect()
+
+        self.hexUnadulteredColour = hex.getColour()
+        hex.setColour((128, 0, 0))
+        hex.addAgent(self)
+        self.hex=hex
     
+    def remove_from_hex(self,hex):
+        hex.setColour(self.hexUnadulteredColour)
+        hex.removeAgent(self)
 
-    def complete_move(self, nextHex):
-        nextHex.addAgent(self)
-        self.hex=nextHex
 
+    #Agent's Sensor reading is used to update decision vectors
     def updateReading(self, reading):
         pass
 
+    #Gets neighboring cells the agent can move to
+    def updateAvailableMoves(self, availableMoves):
+        self.possible_moves = availableMoves
 
+
+    #Inspects the hex it is currently at and adds its information to memory
     def inspect(self):
         if self.hex.site:
             self.add_to_memory(self.hex.site.quality)
