@@ -11,7 +11,7 @@ def main():
     screen.fill((0, 0, 0))
     clock = pygame.time.Clock()
     world = World(340,170)
-    agentEngine = AgentEngine(2, world)
+    agentEngine = AgentEngine(world, numAgents=4)
 
     terminated = False
     while not terminated:

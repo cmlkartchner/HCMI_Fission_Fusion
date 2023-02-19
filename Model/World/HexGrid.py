@@ -184,6 +184,6 @@ class HexGrid:
             if hex.site:
                 sensorReading.sites[hexLocation]=hex.site
             if hex.trail:
-                sensorReading.trails[hexLocation]=hex.trail
+                sensorReading.trails[hexLocation]=hex
         return sensorReading
             

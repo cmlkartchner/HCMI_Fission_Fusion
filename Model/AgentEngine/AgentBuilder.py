@@ -1,8 +1,6 @@
 import random
 
 from Model.Agent.Agent import Agent
-from Model.AgentEngine.Memory import Memory
-
 
 def build(numAgents,grid):
     agents = []
@@ -12,8 +10,7 @@ def build(numAgents,grid):
     hexes.append(grid.hexagons.get(location))
 
     for i in range(numAgents):
-        memory = Memory(grid.hexagons)
+        memory = {key:-1 for key in grid.hexagons.keys()}
         agent = Agent(i,hexes[i],memory)
         agents.append(agent)
-
     return agents
