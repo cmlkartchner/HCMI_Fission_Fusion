@@ -12,5 +12,5 @@ class AgentEngine:
             reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
             availableMoves = self.grid.get_immediate_neighbors(agent.hex)
             agent.updateAvailableMoves(availableMoves)
-            agent.updateReading(reading)
+            agent.move(agent.getIntent(reading))
             

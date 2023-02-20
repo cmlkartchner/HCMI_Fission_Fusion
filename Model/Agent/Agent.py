@@ -18,55 +18,70 @@ class Agent:
     
     #Moves the agent from one cell to a neighbor. 
 
-    def move(self,to):
+    def move(self,nextHex):
         self.remove_from_hex(self.hex)
-        
-        nextHex = self.possible_moves.get(to)
         self.situate_at_hex(nextHex)        
 
     def situate_at_hex(self,hex):
         self.inspect()
 
-        self.hexUnadulteredColour = hex.getColour()
         hex.setColour((128, 0, 0))
         hex.addAgent(self)
         self.hex=hex
     
     def remove_from_hex(self,hex):
-        hex.setColour(self.hexUnadulteredColour)
         self.hex.trail += self.pheromone_strength
         hex.removeAgent(self)
 
 
     #Agent's Sensor reading is used to update decision vectors
-    def updateReading(self, reading):
-        self.decisionVectors = []
+    def getIntent(self, reading):
+        decisionVectors = self.getDecisionVectors(reading)
+        sum_q,sum_r,sum_intent = 0,0,0
+        for (q,r,intent) in decisionVectors:
+            sum_q+=q*intent
+            sum_r+=r*intent
+            sum_intent+=intent
+        
+        q = round(sum_q/sum_intent) + self.hex.q
+        r = round(sum_r/sum_intent) + self.hex.r
+
+        return self.possible_moves.get((q,r))
+    
+    def getDecisionVectors(self, reading):
+        decisionVectors = []
+        
         if self.state == State.EXPLORE:
             if reading.trails:
-                for trailHex in reading.trails.Values():
-                    q,r = self.get_step_to_target(trailHex)
+                for trailHex in reading.trails.values():
+                    if self.hex.computeDistance(trailHex):
+                        q,r = self.get_step_to_target(trailHex)
+                        # getting hex's relative position to self.hex
+                        q,r = q-self.hex.q, r-self.hex.r
 
-                    intent = trailHex.trail/(self.hex.computeDistance(trailHex))**2
-                    hex = self.possible_moves.get((q,r))
-                    self.decisionVectors.append((hex,intent))
+                        intent = trailHex.trail/(self.hex.computeDistance(trailHex))**2
+                        decisionVectors.append((q,r,intent))
 
         if reading.sites:
             for site in reading.sites.values():
-                q,r = self.get_step_to_target(site.hex)
-                
-                intent = site.quality/(self.hex.computeDistance(site.hex))**2
-                hex = self.possible_moves.get((q,r))
-                self.decisionVectors.append((hex,intent))
+                if self.hex.computeDistance(site.hex):
+                    q,r = self.get_step_to_target(site.hex)
+                    q,r = q-self.hex.q, r-self.hex.r
+
+                    intent = site.quality/(self.hex.computeDistance(site.hex))**2
+                    decisionVectors.append((q,r,intent))
         
         if reading.agents:
             for agents in reading.agents.values():
                 for agent in agents:
-                    q,r = self.get_step_to_target(agent.hex)
+                    if self.hex.computeDistance(agent.hex):
+                        q,r = self.get_step_to_target(agent.hex)
+                        q,r = q-self.hex.q, r-self.hex.r
 
-                    intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
-                    hex = self.possible_moves.get((q,r))
-                    self.decisionVectors.append((hex,intent))
-
+                        intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
+                        decisionVectors.append((q,r,intent))
+        
+        return decisionVectors 
 
 
     #Gets neighboring cells the agent can move to
@@ -78,6 +93,7 @@ class Agent:
     def inspect(self):
         if self.hex.site:
             self.add_to_memory(self.hex.site.quality)
+            self.hex.removeSite()
         else:
             self.add_to_memory(0)
 

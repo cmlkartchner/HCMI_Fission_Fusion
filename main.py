@@ -10,18 +10,25 @@ def main():
     screen = pygame.display.set_mode((1600, 900))
     screen.fill((0, 0, 0))
     clock = pygame.time.Clock()
+    
     world = World(340,170)
-    agentEngine = AgentEngine(world, numAgents=4)
+    agentEngine = AgentEngine(world, numAgents=1)
+
+    time_delay = 1500
+    agent_move_event = pygame.USEREVENT+1
+    pygame.time.set_timer(agent_move_event, time_delay)
 
     terminated = False
     while not terminated:
+        clock.tick(50)
+        world.render(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminated = True
-
-        world.render(screen)
-        agentEngine.update(screen)
-        clock.tick(50)
+                break
+            elif event.type == agent_move_event:
+                agentEngine.update(screen)
+        
     pygame.display.quit()
 
 

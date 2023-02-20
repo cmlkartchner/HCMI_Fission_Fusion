@@ -32,6 +32,7 @@ class HexTile:
         self.row = row
         self.col = col
         self.colour = colour
+        self.default_colour = colour
 
         #visual attributes
         self.highlight_offset = 3
@@ -56,7 +57,11 @@ class HexTile:
         """Updates tile highlights"""
         if self.highlight_tick > 0:
             self.highlight_tick -= 1
-        
+
+        if not self.agents and not self.site:
+            self.setDefaultColour()
+
+        #Todo: make this a timed event
         if self.trail > 0:
             self.trail -= 1
 
@@ -95,10 +100,16 @@ class HexTile:
 
     def setColour(self, colour):
         self.colour = colour
+
+    def setDefaultColour(self):
+        self.colour = self.default_colour
     
     #Initialize the hex as a site
     def setSite(self, site):
         self.site=site
+
+    def removeSite(self):
+        self.site = None
     
     def addAgent(self, agent):
         self.agents.add(agent)
