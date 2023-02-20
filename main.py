@@ -14,7 +14,7 @@ def main():
     world = World(340,170)
     agentEngine = AgentEngine(world, numAgents=1)
 
-    time_delay = 1500
+    time_delay = 500
     agent_move_event = pygame.USEREVENT+1
     pygame.time.set_timer(agent_move_event, time_delay)
 

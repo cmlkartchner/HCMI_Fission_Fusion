@@ -1,3 +1,4 @@
+import random
 from .State import State
 
 class Agent:
@@ -37,14 +38,21 @@ class Agent:
     #Agent's Sensor reading is used to update decision vectors
     def getIntent(self, reading):
         decisionVectors = self.getDecisionVectors(reading)
-        sum_q,sum_r,sum_intent = 0,0,0
-        for (q,r,intent) in decisionVectors:
-            sum_q+=q*intent
-            sum_r+=r*intent
-            sum_intent+=intent
-        
-        q = round(sum_q/sum_intent) + self.hex.q
-        r = round(sum_r/sum_intent) + self.hex.r
+        if decisionVectors:
+            sum_q,sum_r,sum_intent = 0,0,0
+            for (q,r,intent) in decisionVectors:
+                sum_q+=q*intent
+                sum_r+=r*intent
+                sum_intent+=intent
+            
+            q, r = round(sum_q/sum_intent), round(sum_r/sum_intent)
+            if q==0 and r==0:
+                q,r = self.getRandomDirection()
+        else:
+            q,r = self.getRandomDirection()
+
+        q+=self.hex.q
+        r+=self.hex.r
 
         return self.possible_moves.get((q,r))
     
@@ -82,6 +90,10 @@ class Agent:
                         decisionVectors.append((q,r,intent))
         
         return decisionVectors 
+    
+    def getRandomDirection(self):
+        directions = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
+        return random.choice(directions)
 
 
     #Gets neighboring cells the agent can move to
@@ -93,6 +105,7 @@ class Agent:
     def inspect(self):
         if self.hex.site:
             self.add_to_memory(self.hex.site.quality)
+            #Once a site is visited, it is removed from the grid
             self.hex.removeSite()
         else:
             self.add_to_memory(0)
