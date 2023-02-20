@@ -91,6 +91,12 @@ class HexGrid:
             #     neighbour.render_highlight(screen, border_colour=(100, 100, 100))
             # hexagon.render_highlight(screen, border_colour=(0, 0, 0))
         pygame.display.flip()
+    
+    
+    #Updates linked to agent actions
+    def timed_update(self):
+        for hexagon in self.hexagons.values():
+            hexagon.timed_update()
 
 
     def get_immediate_neighbors(self, hex) -> List[HexTile]:

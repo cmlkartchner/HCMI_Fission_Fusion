@@ -61,7 +61,8 @@ class HexTile:
         if not self.agents and not self.site:
             self.setDefaultColour()
 
-        #Todo: make this a timed event
+    
+    def timed_update(self):
         if self.trail > 0:
             self.trail -= 1
 

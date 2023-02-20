@@ -18,6 +18,10 @@ def main():
     agent_move_event = pygame.USEREVENT+1
     pygame.time.set_timer(agent_move_event, time_delay)
 
+    world_timed_update_event = pygame.USEREVENT+2
+    pygame.time.set_timer(world_timed_update_event, time_delay)
+    
+
     terminated = False
     while not terminated:
         clock.tick(50)
@@ -28,6 +32,8 @@ def main():
                 break
             elif event.type == agent_move_event:
                 agentEngine.update(screen)
+            elif event.type == world_timed_update_event:
+                world.hexGrid.timed_update()
         
     pygame.display.quit()
 
