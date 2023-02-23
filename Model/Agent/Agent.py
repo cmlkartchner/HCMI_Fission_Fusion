@@ -33,6 +33,8 @@ class Agent:
     def remove_from_hex(self,hex):
         self.hex.trail += self.pheromone_strength
         hex.removeAgent(self)
+        if not hex.agents and not hex.site:
+            hex.setDefaultColour()
 
 
     #Agent's Sensor reading is used to update decision vectors
