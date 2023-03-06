@@ -107,14 +107,10 @@ class Agent:
     def inspect(self):
         if self.hex.site:
             self.add_to_memory(self.hex.site.quality)
-            #Once a site is visited, it is removed from the grid
-            self.hex.removeSite()
-        else:
-            self.add_to_memory(0)
 
     def add_to_memory(self, value, location=None):
         if location is None:
-            location = (self.hex.q,self.hex.r)
+            location = (self.hex.q, self.hex.r)
         self.memory[location] = value
 
     def get_from_memory(self, location):
