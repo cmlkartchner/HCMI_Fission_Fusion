@@ -1,9 +1,10 @@
 
 class Site:
     """ Represents areas the agents would want to explore """
-    def __init__(self, hexagon, quality=5):
+    def __init__(self, hexagon, siteColour=(0,128,0), quality=5):
         self.hex = hexagon
-        self.hex.setColour((0,128,0))
+        self.siteColour = siteColour
+        self.hex.setColour(siteColour)
         self.hex.setSite(self)
 
         self.quality = quality

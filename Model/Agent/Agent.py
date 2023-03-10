@@ -1,4 +1,5 @@
 import random
+import time
 from .State import State
 
 class Agent:
@@ -35,6 +36,8 @@ class Agent:
         hex.removeAgent(self)
         if not hex.agents and not hex.site:
             hex.setDefaultColour()
+        elif hex.site:
+            hex.setColour(hex.site.siteColour)
 
 
     #Agent's Sensor reading is used to update decision vectors
@@ -73,13 +76,16 @@ class Agent:
                         decisionVectors.append((q,r,intent))
 
         if reading.sites:
-            for site in reading.sites.values():
-                if self.hex.computeDistance(site.hex):
-                    q,r = self.get_step_to_target(site.hex)
-                    q,r = q-self.hex.q, r-self.hex.r
+            for loc in reading.sites.keys():
+                if not self.memory.contains(loc):
+                    site = reading.sites[loc]
 
-                    intent = site.quality/(self.hex.computeDistance(site.hex))**2
-                    decisionVectors.append((q,r,intent))
+                    if self.hex.computeDistance(site.hex):
+                        q,r = self.get_step_to_target(site.hex)
+                        q,r = q-self.hex.q, r-self.hex.r
+
+                        intent = site.quality/(self.hex.computeDistance(site.hex))**2
+                        decisionVectors.append((q,r,intent))
         
         if reading.agents:
             for agents in reading.agents.values():
@@ -106,15 +112,20 @@ class Agent:
     #Inspects the hex it is currently at and adds its information to memory
     def inspect(self):
         if self.hex.site:
-            self.add_to_memory(self.hex.site.quality)
+            if not self.memory.contains((self.hex.q,self.hex.r)):
+                self.add_to_memory(self.hex.site.quality)
 
-    def add_to_memory(self, value, location=None):
+    def add_to_memory(self, value, location=None, timestamp=None):
         if location is None:
             location = (self.hex.q, self.hex.r)
-        self.memory[location] = value
 
+        if timestamp is None:
+            timestamp = time.time()
+        
+        self.memory.set(location, value,timestamp)
+    
     def get_from_memory(self, location):
-        return self.memory[location]
+        return self.memory.get(location)
     
 
     #Gets next hex to move to in order to reach target

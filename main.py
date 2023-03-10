@@ -12,7 +12,7 @@ def main():
     clock = pygame.time.Clock()
     
     world = World(340,170)
-    agentEngine = AgentEngine(world, numAgents=7)
+    agentEngine = AgentEngine(world, numAgents=1)
 
     time_delay = 500
     agent_move_event = pygame.USEREVENT+1

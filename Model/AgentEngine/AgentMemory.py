@@ -6,15 +6,16 @@ class AgentMemoryTimedDict:
         self.expiry_time = expiry_time
         self.data = OrderedDict()
 
-    def __getitem__(self, key):
+    def get(self, key):
         self.cleanup()
-        return self.data[key][0]
+        if key in self.data:
+            return self.data[key]
 
-    def __setitem__(self, key, value):
+    def set(self, key, value, timestamp):
         self.cleanup()
-        self.data[key] = (value, time.time())
+        self.data[key] = (value, timestamp)
 
-    def __contains__(self, key):
+    def contains(self, key):
         self.cleanup()
         return key in self.data
 
@@ -23,6 +24,7 @@ class AgentMemoryTimedDict:
         return [(key, value[0], value[1]) for key, value in list(self.data.items())[-n:]]
 
     def cleanup(self):
+        
         current_time = time.time()
         expired_keys = []
         for key, value in self.data.items():
