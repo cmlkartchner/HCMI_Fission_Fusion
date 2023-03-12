@@ -22,6 +22,10 @@ class AgentMemoryTimedDict:
     def get_n_most_recent(self, n):
         self.cleanup()
         return [(key, value[0], value[1]) for key, value in list(self.data.items())[-n:]]
+    
+    def get_most_recent(self):
+        return self.get_n_most_recent(1)[0]
+    
 
     def cleanup(self):
         

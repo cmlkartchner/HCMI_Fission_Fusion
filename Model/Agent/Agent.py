@@ -12,6 +12,7 @@ class Agent:
         self.state = State.GROUP
         self.max_movement_speed = self.movement_speed*2
         self.sensing_radius = 20
+        self.communication_radius = 40
         self.memory = memory
         self.pheromone_strength = pheromone_strength
 
@@ -114,6 +115,12 @@ class Agent:
         if self.hex.site:
             if not self.memory.contains((self.hex.q,self.hex.r)):
                 self.add_to_memory(self.hex.site.quality)
+                self.observer.notify(self)
+                
+                value, location, timestamp = self.memory.get_most_recent()
+                for agents in self.nearby_agents.values():
+                    for agent in agents:
+                        agent.add_to_memory(value, location, timestamp)
 
     def add_to_memory(self, value, location=None, timestamp=None):
         if location is None:
@@ -122,7 +129,7 @@ class Agent:
         if timestamp is None:
             timestamp = time.time()
         
-        self.memory.set(location, value,timestamp)
+        self.memory.set(location, value, timestamp)
     
     def get_from_memory(self, location):
         return self.memory.get(location)
@@ -165,3 +172,11 @@ class Agent:
     #Calculates the attraction between agents
     def getAttractionCoefficient(self,other):
         return 0.01
+
+    # AgentEngine is attached as an observer
+    def attach_observer(self, observer):
+        self.observer = observer
+
+    def set_nearby_agents(self,nearby_agents):
+        self.nearby_agents = nearby_agents
+        
