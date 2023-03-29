@@ -13,6 +13,7 @@ class Agent:
         self.max_movement_speed = self.movement_speed*2
         self.sensing_radius = 20
         self.communication_radius = 40
+        self.comfort_radius = 4
         self.memory = memory
         self.pheromone_strength = pheromone_strength
 
@@ -28,12 +29,12 @@ class Agent:
     def situate_at_hex(self,hex):
         self.inspect()
 
-        hex.setColour((128, 0, 0))
+        hex.setColour(self.state)
         hex.addAgent(self)
         self.hex=hex
     
     def remove_from_hex(self,hex):
-        self.hex.trail += self.pheromone_strength
+        self.hex.trail.add((self.id, self.pheromone_strength))
         hex.removeAgent(self)
         if not hex.agents and not hex.site:
             hex.setDefaultColour()
@@ -51,9 +52,10 @@ class Agent:
                 sum_r+=r*intent
                 sum_intent+=intent
             
-            q, r = round(sum_q/sum_intent), round(sum_r/sum_intent)
-            if q==0 and r==0:
-                q,r = self.getRandomDirection()
+            if sum_intent:
+                q, r = round(sum_q/sum_intent), round(sum_r/sum_intent)
+                if q==0 and r==0:
+                    q,r = self.getRandomDirection()
         else:
             q,r = self.getRandomDirection()
 
@@ -73,7 +75,14 @@ class Agent:
                         # getting hex's relative position to self.hex
                         q,r = q-self.hex.q, r-self.hex.r
 
-                        intent = trailHex.trail/(self.hex.computeDistance(trailHex))**2
+                        total_pheromone_strength=0
+                        for item in trailHex.trail:
+                            id, pheromone_strength = item
+                            if id!=self.id:
+                                total_pheromone_strength += pheromone_strength
+                        
+                        total_pheromone_strength/=100
+                        intent = total_pheromone_strength/(self.hex.computeDistance(trailHex))**2
                         decisionVectors.append((q,r,intent))
 
         if reading.sites:
@@ -179,4 +188,6 @@ class Agent:
 
     def set_nearby_agents(self,nearby_agents):
         self.nearby_agents = nearby_agents
-        
+    
+    def setState(self,state):
+        self.state = state

@@ -44,7 +44,7 @@ class HexTile:
         # Keeping track of things situated on the tile
         self.site=None
         self.agents=set()
-        self.trail=0
+        self.trail=set()
 
         #Hex coordinates
         self.q = self.col
@@ -59,12 +59,22 @@ class HexTile:
             self.highlight_tick -= 1
 
         if not self.agents and not self.site:
-            self.setDefaultColour()
-
+            if not self.trail:
+                self.setDefaultColour()
+            else:
+                self.setColour(self.getIntensityColour())
     
     def timed_update(self):
-        if self.trail > 0:
-            self.trail -= 1
+        trail_copy = set(self.trail)
+        for item in trail_copy:
+            id, intensity = item
+            intensity -= 1
+
+            if intensity == 0:
+                self.trail.remove(item)
+            else:
+                self.trail.remove(item)
+                self.trail.add((id, intensity))
 
     def compute_vertices(self) -> List[Tuple[float, float]]:
         """Returns a list of the hexagon's vertices as x, y tuples"""
@@ -98,6 +108,22 @@ class HexTile:
 
     def getColour(self):
         return self.colour
+    
+    def getIntensityColour(self):
+        total_intensity = 0 
+        # Adding all trails together
+        for id,intensity in self.trail:
+            total_intensity += intensity
+
+        #normalizing the trail value
+        total_intensity //= len(self.trail)
+        total_intensity+=1
+
+        blue_value = total_intensity * 42
+        color = (0, 0, blue_value)
+
+        return color
+
 
     def setColour(self, colour):
         self.colour = colour
