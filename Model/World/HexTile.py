@@ -58,6 +58,9 @@ class HexTile:
         if self.highlight_tick > 0:
             self.highlight_tick -= 1
 
+        if self.agents:
+            self.max_intensity = next(iter(self.agents)).pheromone_strength
+
         if not self.agents and not self.site:
             if not self.trail:
                 self.setDefaultColour()
@@ -118,6 +121,9 @@ class HexTile:
         #normalizing the trail value
         total_intensity //= len(self.trail)
         total_intensity+=1
+
+        # Dividing 255 by how long can a trail can extend
+        multiplier = 255//self.max_intensity
 
         blue_value = total_intensity * 42
         color = (0, 0, blue_value)

@@ -3,7 +3,7 @@ import time
 from .State import State
 
 class Agent:
-    def __init__(self, id, hex, memory, pheromone_strength=5, health=100, movement_speed=1):
+    def __init__(self, id, hex, memory, pheromone_strength=10, health=100, movement_speed=1):
         self.id = id
         self.health = health
         self.movement_speed = movement_speed
@@ -56,6 +56,8 @@ class Agent:
                 q, r = round(sum_q/sum_intent), round(sum_r/sum_intent)
                 if q==0 and r==0:
                     q,r = self.getRandomDirection()
+            else:
+                q,r = self.getRandomDirection()
         else:
             q,r = self.getRandomDirection()
 
@@ -81,7 +83,7 @@ class Agent:
                             if id!=self.id:
                                 total_pheromone_strength += pheromone_strength
                         
-                        total_pheromone_strength/=100
+                        total_pheromone_strength/=1000
                         intent = total_pheromone_strength/(self.hex.computeDistance(trailHex))**2
                         decisionVectors.append((q,r,intent))
 
