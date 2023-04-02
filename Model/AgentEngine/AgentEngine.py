@@ -1,4 +1,4 @@
-from Model.Agent.State import State
+from Model.Agent.State import ExploreState, GroupState, State
 from . import AgentBuilder
 from Model.AgentEngine.SensorReading import SensorReading
 
@@ -17,16 +17,20 @@ class AgentEngine:
             #Identifying agents in comfort radius to determine if state change is possible
             reading = self.grid.get_rDistance_reading(agent.hex, agent.comfort_radius, SensorReading())
             if not reading.agents:
-                agent.setState(State.EXPLORE)
+                agent.setState(ExploreState())
             
-            elif agent.state == State.EXPLORE:
-                agent.setState(State.GROUP)
+            elif isinstance(agent.state, ExploreState):
+                if agent.state.timer>=40:
+                    agent.setState(GroupState())
             
             #Identifying objects in sensing radius to determine intent
             reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
             availableMoves = self.grid.get_immediate_neighbors(agent.hex)
             agent.updateAvailableMoves(availableMoves)
             agent.move(agent.getIntent(reading))
+
+            # For the agent to keep track of time spent in state
+            agent.state.update()
     
     def notify(self, agent):
 

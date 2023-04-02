@@ -1,6 +1,6 @@
 import random
 import time
-from .State import State
+from .State import GroupState, ExploreState, PredatorState, State
 
 class Agent:
     def __init__(self, id, hex, memory, pheromone_strength=10, health=100, movement_speed=1):
@@ -9,11 +9,11 @@ class Agent:
         self.movement_speed = movement_speed
         self.hex = hex
         
-        self.state = State.GROUP
+        self.state = GroupState()
         self.max_movement_speed = self.movement_speed*2
         self.sensing_radius = 20
         self.communication_radius = 40
-        self.comfort_radius = 4
+        self.comfort_radius = 5
         self.memory = memory
         self.pheromone_strength = pheromone_strength
 
@@ -29,7 +29,7 @@ class Agent:
     def situate_at_hex(self,hex):
         self.inspect()
 
-        hex.setColour(self.state)
+        hex.setColour(self.state.color)
         hex.addAgent(self)
         self.hex=hex
     
@@ -69,13 +69,17 @@ class Agent:
     def getDecisionVectors(self, reading):
         decisionVectors = []
         
-        if self.state == State.EXPLORE:
+        if isinstance(self.state, ExploreState):
             if reading.trails:
                 for trailHex in reading.trails.values():
                     if self.hex.computeDistance(trailHex):
                         q,r = self.get_step_to_target(trailHex)
                         # getting hex's relative position to self.hex
                         q,r = q-self.hex.q, r-self.hex.r
+                        
+                        # getting intent direction based on agent's current state
+                        directionMultiplier = self.state.getTrailDirectionMultiplier()
+                        q,r = q*directionMultiplier, r*directionMultiplier
 
                         total_pheromone_strength=0
                         for item in trailHex.trail:
@@ -85,6 +89,8 @@ class Agent:
                         
                         total_pheromone_strength/=1000
                         intent = total_pheromone_strength/(self.hex.computeDistance(trailHex))**2
+                        intent*=self.state.getIntentToTrailMultiplier()
+                        
                         decisionVectors.append((q,r,intent))
 
         if reading.sites:
@@ -96,7 +102,12 @@ class Agent:
                         q,r = self.get_step_to_target(site.hex)
                         q,r = q-self.hex.q, r-self.hex.r
 
+                        directionMultiplier = self.state.getSiteDirectionMultiplier()
+                        q,r = q*directionMultiplier, r*directionMultiplier
+
                         intent = site.quality/(self.hex.computeDistance(site.hex))**2
+                        intent*=self.state.getIntentToSiteMultiplier()
+
                         decisionVectors.append((q,r,intent))
         
         if reading.agents:
@@ -106,7 +117,12 @@ class Agent:
                         q,r = self.get_step_to_target(agent.hex)
                         q,r = q-self.hex.q, r-self.hex.r
 
+                        directionMultiplier = self.state.getAgentDirectionMultiplier()
+                        q,r = q*directionMultiplier, r*directionMultiplier
+
                         intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
+                        intent*=self.state.getIntentToAgentMultiplier()
+
                         decisionVectors.append((q,r,intent))
         
         return decisionVectors 
@@ -182,7 +198,7 @@ class Agent:
     
     #Calculates the attraction between agents
     def getAttractionCoefficient(self,other):
-        return 0.01
+        return 0.1
 
     # AgentEngine is attached as an observer
     def attach_observer(self, observer):
