@@ -11,6 +11,8 @@ class AgentEngine:
         for agent in self.agents:
             agent.attach_observer(self)
 
+        self.move_timers = {agent: 0 for agent in self.agents}
+
     def update(self,screen):
         for agent in self.agents:
             

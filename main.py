@@ -12,9 +12,9 @@ def main():
     clock = pygame.time.Clock()
     
     world = World(340,170)
-    agentEngine = AgentEngine(world, numAgents=4)
+    agentEngine = AgentEngine(world, numAgents=37)
 
-    time_delay = 500
+    time_delay = 50
     agent_move_event = pygame.USEREVENT+1
     pygame.time.set_timer(agent_move_event, time_delay)
 
@@ -24,7 +24,7 @@ def main():
 
     terminated = False
     while not terminated:
-        clock.tick(100)
+        clock.tick(50)
         world.render(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

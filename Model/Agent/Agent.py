@@ -3,14 +3,14 @@ import time
 from .State import GroupState, ExploreState, PredatorState, State
 
 class Agent:
-    def __init__(self, id, hex, memory, pheromone_strength=10, health=100, movement_speed=1):
+    def __init__(self, id, hex, memory, attractionCoefficient, pheromone_strength=10, health=100, movement_speed=1):
         self.id = id
         self.health = health
         self.movement_speed = movement_speed
         self.hex = hex
+        self.attractionCoefficient = attractionCoefficient
         
         self.state = GroupState()
-        self.max_movement_speed = self.movement_speed*2
         self.sensing_radius = 20
         self.communication_radius = 40
         self.comfort_radius = 5
@@ -198,7 +198,7 @@ class Agent:
     
     #Calculates the attraction between agents
     def getAttractionCoefficient(self,other):
-        return 0.1
+        return self.attractionCoefficient
 
     # AgentEngine is attached as an observer
     def attach_observer(self, observer):
