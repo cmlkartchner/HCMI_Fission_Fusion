@@ -7,7 +7,6 @@ class Agent:
         self.id = id
         self.health = health
         self.movement_speed = movement_speed
-        self.hex = hex
         self.attractionCoefficient = attractionCoefficient
         
         self.state = GroupState()
@@ -17,7 +16,7 @@ class Agent:
         self.memory = memory
         self.pheromone_strength = pheromone_strength
 
-        self.situate_at_hex(hex)
+        self.situate_at_hex(hex, False)
 
     
     #Moves the agent from one cell to a neighbor. 
@@ -26,8 +25,9 @@ class Agent:
         self.remove_from_hex(self.hex)
         self.situate_at_hex(nextHex)        
 
-    def situate_at_hex(self,hex):
-        self.inspect()
+    def situate_at_hex(self, hex, inspectFlag=True):
+        if inspectFlag:
+            self.inspect()
 
         hex.setColour(self.state.color)
         hex.addAgent(self)
@@ -199,6 +199,10 @@ class Agent:
     #Calculates the attraction between agents
     def getAttractionCoefficient(self,other):
         return self.attractionCoefficient
+    
+    def getMovementSpeed(self):
+        return self.movement_speed*self.state.getSpeedMultiplier()
+
 
     # AgentEngine is attached as an observer
     def attach_observer(self, observer):

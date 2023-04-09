@@ -31,7 +31,7 @@ def main():
                 terminated = True
                 break
             elif event.type == agent_move_event:
-                agentEngine.update(screen)
+                agentEngine.update(time_delay, screen)
             elif event.type == world_timed_update_event:
                 world.hexGrid.timed_update()
         

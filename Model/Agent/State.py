@@ -6,8 +6,8 @@ class State:
         self.color = color
         self.timer = 0
     
-    def update(self):
-        self.timer += 1
+    def update(self, dt):
+        self.timer += dt/1000   # to convert dt to seconds
 
 class GroupState(State):
     def __init__(self):
@@ -31,19 +31,22 @@ class GroupState(State):
     def getIntentToSiteMultiplier(self):
         return 1
     
+    def getSpeedMultiplier(self):
+        return 1
+
 class ExploreState(State):
     def __init__(self):
         super().__init__((253, 218, 13)) # yellow
 
     # Direction Multiplier 
     def getTrailDirectionMultiplier(self):
-        if self.timer <= 20:
+        if self.timer <= 10:
             return -1
         else:
             return 1
 
     def getAgentDirectionMultiplier(self):
-        if self.timer <= 20:
+        if self.timer <= 10:
             return -1
         else:
             return 1
@@ -55,21 +58,25 @@ class ExploreState(State):
     def getIntentToAgentMultiplier(self):
 
         # Intent to agent Multiplier is a parabolic curve with a minima at timer=20
-        if self.timer<=40:
-            return 0.01225*(self.timer**2)-0.49*(self.timer)+5
+        if self.timer<=20:
+            return 0.049*(self.timer**2)-0.98*(self.timer)+5
         else:
             return 5 
 
     def getIntentToTrailMultiplier(self):
-        if self.timer<=40:
-            return 0.00475*(self.timer**2)-0.19*(self.timer)+2
+        if self.timer<=20:
+            return 0.019*(self.timer**2)-0.38*(self.timer)+2
         else:
             return 5 
 
     def getIntentToSiteMultiplier(self):
 
         # intent to site Multiplier follows exponential decay
-        return 0.9 * math.exp(-0.1 * self.timer) + 1.1
+        return 0.9 * math.exp(-0.2 * self.timer) + 1.1
+    
+    # Speed multiplier
+    def getSpeedMultiplier(self):
+        return 2
 
 class PredatorState(State):
     def __init__(self):

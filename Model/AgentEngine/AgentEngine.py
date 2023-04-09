@@ -13,26 +13,30 @@ class AgentEngine:
 
         self.move_timers = {agent: 0 for agent in self.agents}
 
-    def update(self,screen):
+    def update(self,dt,screen):
         for agent in self.agents:
-            
-            #Identifying agents in comfort radius to determine if state change is possible
-            reading = self.grid.get_rDistance_reading(agent.hex, agent.comfort_radius, SensorReading())
-            if not reading.agents:
-                agent.setState(ExploreState())
-            
-            elif isinstance(agent.state, ExploreState):
-                if agent.state.timer>=40:
-                    agent.setState(GroupState())
-            
-            #Identifying objects in sensing radius to determine intent
-            reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
-            availableMoves = self.grid.get_immediate_neighbors(agent.hex)
-            agent.updateAvailableMoves(availableMoves)
-            agent.move(agent.getIntent(reading))
+            self.move_timers[agent] += dt
 
-            # For the agent to keep track of time spent in state
-            agent.state.update()
+            if self.move_timers[agent] >= 1000/agent.getMovementSpeed():
+
+                #Identifying agents in comfort radius to determine if state change is possible
+                reading = self.grid.get_rDistance_reading(agent.hex, agent.comfort_radius, SensorReading())
+                if not reading.agents:
+                    agent.setState(ExploreState())
+                
+                elif isinstance(agent.state, ExploreState):
+                    if agent.state.timer>=40:
+                        agent.setState(GroupState())
+                
+                #Identifying objects in sensing radius to determine intent
+                reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
+                availableMoves = self.grid.get_immediate_neighbors(agent.hex)
+                agent.updateAvailableMoves(availableMoves)
+                agent.move(agent.getIntent(reading))
+
+                # For the agent to keep track of time spent in state
+                agent.state.update(self.move_timers[agent])
+                self.move_timers[agent] = 0
     
     def notify(self, agent):
 
