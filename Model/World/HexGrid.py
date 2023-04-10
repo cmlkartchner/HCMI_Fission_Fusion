@@ -94,9 +94,9 @@ class HexGrid:
     
     
     #Updates linked to agent actions
-    def timed_update(self):
+    def timed_update(self,dt):
         for hexagon in self.hexagons.values():
-            hexagon.timed_update()
+            hexagon.timed_update(dt)
 
 
     def get_immediate_neighbors(self, hex) -> List[HexTile]:

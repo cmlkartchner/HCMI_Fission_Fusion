@@ -9,12 +9,16 @@ class Agent:
         self.movement_speed = movement_speed
         self.attractionCoefficient = attractionCoefficient
         
+        self.hex=hex
+
         self.state = GroupState()
         self.sensing_radius = 20
         self.communication_radius = 40
         self.comfort_radius = 5
         self.memory = memory
         self.pheromone_strength = pheromone_strength
+
+        self.cached_state=None
 
         self.situate_at_hex(hex, False)
 
@@ -34,8 +38,10 @@ class Agent:
         self.hex=hex
     
     def remove_from_hex(self,hex):
-        self.hex.trail.add((self.id, self.pheromone_strength))
+        timer = 1000/(self.movement_speed*self.state.getSpeedMultiplier())
+        self.hex.trail.add((self.id, self.pheromone_strength, timer, timer))
         hex.removeAgent(self)
+        
         if not hex.agents and not hex.site:
             hex.setDefaultColour()
         elif hex.site:
@@ -64,7 +70,10 @@ class Agent:
         q+=self.hex.q
         r+=self.hex.r
 
-        return self.possible_moves.get((q,r))
+        if self.possible_moves.get((q,r))!=None:
+            return self.possible_moves.get((q,r))
+        else:
+            return random.choice(list(self.possible_moves.values()))
     
     def getDecisionVectors(self, reading):
         decisionVectors = []
@@ -83,7 +92,7 @@ class Agent:
 
                         total_pheromone_strength=0
                         for item in trailHex.trail:
-                            id, pheromone_strength = item
+                            id, pheromone_strength, timer, sacredTimer = item
                             if id!=self.id:
                                 total_pheromone_strength += pheromone_strength
                         

@@ -57,17 +57,11 @@ class ExploreState(State):
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
 
-        # Intent to agent Multiplier is a parabolic curve with a minima at timer=20
-        if self.timer<=20:
-            return 0.049*(self.timer**2)-0.98*(self.timer)+5
-        else:
-            return 5 
+        # Intent to agent Multiplier is a parabolic curve with a minima at timer=10
+        return 0.049*(self.timer**2)-0.98*(self.timer)+5
 
     def getIntentToTrailMultiplier(self):
-        if self.timer<=20:
-            return 0.019*(self.timer**2)-0.38*(self.timer)+2
-        else:
-            return 5 
+        return 0.019*(self.timer**2)-0.38*(self.timer)+2
 
     def getIntentToSiteMultiplier(self):
 
@@ -77,6 +71,13 @@ class ExploreState(State):
     # Speed multiplier
     def getSpeedMultiplier(self):
         return 2
+
+
+class YearningState(State):
+    def __init__(self):
+        super().__init__((255, 192, 203)) # pink
+
+    
 
 class PredatorState(State):
     def __init__(self):

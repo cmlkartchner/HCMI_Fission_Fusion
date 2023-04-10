@@ -67,17 +67,20 @@ class HexTile:
             else:
                 self.setColour(self.getIntensityColour())
     
-    def timed_update(self):
+    def timed_update(self, dt):
         trail_copy = set(self.trail)
         for item in trail_copy:
-            id, intensity = item
-            intensity -= 1
+            id, intensity, timer, sacredTimer = item
+            timer-=dt
+            if timer<=0:
+                intensity -= 1
+                timer = sacredTimer
 
             if intensity == 0:
                 self.trail.remove(item)
             else:
                 self.trail.remove(item)
-                self.trail.add((id, intensity))
+                self.trail.add((id, intensity, timer, sacredTimer))
 
     def compute_vertices(self) -> List[Tuple[float, float]]:
         """Returns a list of the hexagon's vertices as x, y tuples"""
@@ -115,7 +118,7 @@ class HexTile:
     def getIntensityColour(self):
         total_intensity = 0 
         # Adding all trails together
-        for id,intensity in self.trail:
+        for id,intensity,timer,sacredTimer in self.trail:
             total_intensity += intensity
 
         #normalizing the trail value
