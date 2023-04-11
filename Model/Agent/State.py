@@ -12,17 +12,6 @@ class State:
 class GroupState(State):
     def __init__(self):
         super().__init__((30,144,255)) # blue
-
-    """The direction multiplier can be +1 or -1 and is just used to ascertain direction
-    Intent multiplier gives the magnitude of intent 
-    Together the two multipliers determine how much the agent wants to move in a particular direction"""
-
-    # Direction Multiplier
-    def getAgentDirectionMultiplier(self):
-        return 1
-    
-    def getSiteDirectionMultiplier(self):
-        return 1
     
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
@@ -37,31 +26,16 @@ class GroupState(State):
 class ExploreState(State):
     def __init__(self):
         super().__init__((253, 218, 13)) # yellow
-
-    # Direction Multiplier 
-    def getTrailDirectionMultiplier(self):
-        if self.timer <= 10:
-            return -1
-        else:
-            return 1
-
-    def getAgentDirectionMultiplier(self):
-        if self.timer <= 10:
-            return -1
-        else:
-            return 1
-    
-    def getSiteDirectionMultiplier(self):
-        return 1
     
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
-
+        if self.timer>10:
         # Intent to agent Multiplier is a parabolic curve with a minima at timer=10
-        return 0.049*(self.timer**2)-0.98*(self.timer)+5
+            return -5*((10-self.timer)/self.timer)
 
     def getIntentToTrailMultiplier(self):
-        return 0.019*(self.timer**2)-0.38*(self.timer)+2
+        if self.timer>10:
+            return -2*((10-self.timer)/self.timer)
 
     def getIntentToSiteMultiplier(self):
 
@@ -82,13 +56,6 @@ class YearningState(State):
 class PredatorState(State):
     def __init__(self):
         super().__init__((210, 43, 43)) # red
-
-    # Direction Multiplier
-    def getTrailDirectionMultiplier(self):
-        return 1
-
-    def getAgentDirectionMultiplier(self):
-        return 1
     
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):

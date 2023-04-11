@@ -78,17 +78,13 @@ class Agent:
     def getDecisionVectors(self, reading):
         decisionVectors = []
         
-        if isinstance(self.state, ExploreState):
+        if (isinstance(self.state, ExploreState) and self.state.timer>10) or isinstance(self.state,PredatorState):
             if reading.trails:
                 for trailHex in reading.trails.values():
                     if self.hex.computeDistance(trailHex):
                         q,r = self.get_step_to_target(trailHex)
                         # getting hex's relative position to self.hex
                         q,r = q-self.hex.q, r-self.hex.r
-                        
-                        # getting intent direction based on agent's current state
-                        directionMultiplier = self.state.getTrailDirectionMultiplier()
-                        q,r = q*directionMultiplier, r*directionMultiplier
 
                         total_pheromone_strength=0
                         for item in trailHex.trail:
@@ -102,37 +98,33 @@ class Agent:
                         
                         decisionVectors.append((q,r,intent))
 
-        if reading.sites:
-            for loc in reading.sites.keys():
-                if not self.memory.contains(loc):
-                    site = reading.sites[loc]
+        if isinstance(self.state, ExploreState) or isinstance(self.state, GroupState): 
+            if reading.sites:
+                for loc in reading.sites.keys():
+                    if not self.memory.contains(loc):
+                        site = reading.sites[loc]
 
-                    if self.hex.computeDistance(site.hex):
-                        q,r = self.get_step_to_target(site.hex)
-                        q,r = q-self.hex.q, r-self.hex.r
+                        if self.hex.computeDistance(site.hex):
+                            q,r = self.get_step_to_target(site.hex)
+                            q,r = q-self.hex.q, r-self.hex.r
 
-                        directionMultiplier = self.state.getSiteDirectionMultiplier()
-                        q,r = q*directionMultiplier, r*directionMultiplier
+                            intent = site.quality/(self.hex.computeDistance(site.hex))**2
+                            intent*=self.state.getIntentToSiteMultiplier()
 
-                        intent = site.quality/(self.hex.computeDistance(site.hex))**2
-                        intent*=self.state.getIntentToSiteMultiplier()
-
-                        decisionVectors.append((q,r,intent))
+                            decisionVectors.append((q,r,intent))
         
-        if reading.agents:
-            for agents in reading.agents.values():
-                for agent in agents:
-                    if self.hex.computeDistance(agent.hex):
-                        q,r = self.get_step_to_target(agent.hex)
-                        q,r = q-self.hex.q, r-self.hex.r
+        if (isinstance(self.state, ExploreState) and self.state.timer>10) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState):
+            if reading.agents:
+                for agents in reading.agents.values():
+                    for agent in agents:
+                        if self.hex.computeDistance(agent.hex):
+                            q,r = self.get_step_to_target(agent.hex)
+                            q,r = q-self.hex.q, r-self.hex.r
 
-                        directionMultiplier = self.state.getAgentDirectionMultiplier()
-                        q,r = q*directionMultiplier, r*directionMultiplier
+                            intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
+                            intent*=self.state.getIntentToAgentMultiplier()
 
-                        intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
-                        intent*=self.state.getIntentToAgentMultiplier()
-
-                        decisionVectors.append((q,r,intent))
+                            decisionVectors.append((q,r,intent))
         
         return decisionVectors 
     
