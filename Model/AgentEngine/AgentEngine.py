@@ -23,6 +23,7 @@ class AgentEngine:
                 self.setStateBehavior(agent)
 
                 #Identifying objects in sensing radius to determine intent
+
                 reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
                 availableMoves = self.grid.get_immediate_neighbors(agent.hex)
                 agent.updateAvailableMoves(availableMoves)
@@ -48,12 +49,13 @@ class AgentEngine:
         elif reading.agents and isinstance(agent.state, ExploreState):
             if agent.state.timer>=20:
                 agent.setState(GroupState())
-
-        # ToDo      
+      
         elif not reading.agents and isinstance(agent.state, ExploreState) and agent.state.timer>=40:
             agent.cached_state = agent.state
             agent.setState(YearningState())
             print("Agent ", agent.id, "changed from explore state to yearning state")
+
+            directionGroups = [[(1,-1), (1,0)], [(-1,1), (0,1)], [(0,-1), (1,0)]]
 
             reading = SensorReading()
             for a in self.agents:
@@ -62,3 +64,20 @@ class AgentEngine:
                     reading.agents[(a.hex.q,a.hex.r)].add(a)
                 else:
                     reading.agents[(a.hex.q,a.hex.r)] = set([a])
+            
+            availableMoves = self.grid.get_immediate_neighbors(agent.hex)
+            agent.updateAvailableMoves(availableMoves)
+            intentHex = agent.getIntent(reading)
+
+            for group in directionGroups:
+                if (intentHex.q - agent.hex.q, intentHex.r - agent.hex.r) in group:
+                    agent.state.setDirection(group)
+                    break
+
+        elif isinstance(agent.state, YearningState):
+            reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
+            if reading.agents:
+                agent.setState(agent.cached_state)
+                print("Agent ", agent.id, "changed back from yearning state to explore state")
+
+

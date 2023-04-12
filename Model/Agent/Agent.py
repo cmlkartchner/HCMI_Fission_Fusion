@@ -1,6 +1,6 @@
 import random
 import time
-from .State import GroupState, ExploreState, PredatorState, State
+from .State import GroupState, ExploreState, PredatorState, State, YearningState
 
 class Agent:
     def __init__(self, id, hex, memory, attractionCoefficient, pheromone_strength=10, health=100, movement_speed=1):
@@ -78,7 +78,8 @@ class Agent:
     def getDecisionVectors(self, reading):
         decisionVectors = []
         
-        if (isinstance(self.state, ExploreState) and self.state.timer>10) or isinstance(self.state,PredatorState):
+        # Agent will look for trails only if it's in exploreState for more than 10s or if it's in predatorState
+        if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state,PredatorState):
             if reading.trails:
                 for trailHex in reading.trails.values():
                     if self.hex.computeDistance(trailHex):
@@ -98,6 +99,7 @@ class Agent:
                         
                         decisionVectors.append((q,r,intent))
 
+        # Agent will look for sites only if it's in exploreState or groupState
         if isinstance(self.state, ExploreState) or isinstance(self.state, GroupState): 
             if reading.sites:
                 for loc in reading.sites.keys():
@@ -113,7 +115,8 @@ class Agent:
 
                             decisionVectors.append((q,r,intent))
         
-        if (isinstance(self.state, ExploreState) and self.state.timer>10) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState):
+        # Agent will look for other agents if it's in exploreState for more than 10s or if it's in groupState or predatorState or YearningState
+        if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState) or (isinstance(self.state, YearningState) and self.state.direction==None):
             if reading.agents:
                 for agents in reading.agents.values():
                     for agent in agents:
@@ -125,6 +128,10 @@ class Agent:
                             intent*=self.state.getIntentToAgentMultiplier()
 
                             decisionVectors.append((q,r,intent))
+
+        if isinstance(self.state, YearningState) and self.state.direction:
+            q,r = random.choice(self.state.direction)
+            decisionVectors.append((q,r,1))
         
         return decisionVectors 
     

@@ -26,16 +26,17 @@ class GroupState(State):
 class ExploreState(State):
     def __init__(self):
         super().__init__((253, 218, 13)) # yellow
+        self.inflection = 20
     
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
-        if self.timer>10:
+        if self.timer>self.inflection:
         # Intent to agent Multiplier is a parabolic curve with a minima at timer=10
-            return -5*((10-self.timer)/self.timer)
+            return -5*((self.inflection-self.timer)/self.timer)
 
     def getIntentToTrailMultiplier(self):
-        if self.timer>10:
-            return -2*((10-self.timer)/self.timer)
+        if self.timer>self.inflection:
+            return -2*((self.inflection-self.timer)/self.timer)
 
     def getIntentToSiteMultiplier(self):
 
@@ -49,8 +50,20 @@ class ExploreState(State):
 
 class YearningState(State):
     def __init__(self):
-        super().__init__((255, 192, 203)) # pink
+        super().__init__((222, 49, 99)) # pink
+        self.direction=None
 
+    
+    # Intent Multiplier 
+    def getIntentToAgentMultiplier(self):
+        return 1
+
+    # Speed multiplier
+    def getSpeedMultiplier(self):
+        return 2
+
+    def setDirection(self,direction):
+        self.direction=direction
     
 
 class PredatorState(State):
