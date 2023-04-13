@@ -50,7 +50,7 @@ class AgentEngine:
             if agent.state.timer>=20:
                 agent.setState(GroupState())
       
-        elif not reading.agents and isinstance(agent.state, ExploreState) and agent.state.timer>=40:
+        elif not reading.agents and isinstance(agent.state, ExploreState) and agent.state.timer>=agent.state.exploreTimer:
             agent.cached_state = agent.state
             agent.setState(YearningState())
             print("Agent ", agent.id, "changed from explore state to yearning state")
@@ -77,7 +77,9 @@ class AgentEngine:
         elif isinstance(agent.state, YearningState):
             reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
             if reading.agents:
+                agent.cached_state.exploreTimer+=agent.cached_state.exploreTimer
                 agent.setState(agent.cached_state)
+                
                 print("Agent ", agent.id, "changed back from yearning state to explore state")
 
 

@@ -27,6 +27,7 @@ class ExploreState(State):
     def __init__(self):
         super().__init__((253, 218, 13)) # yellow
         self.inflection = 20
+        self.exploreTimer = 40
     
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
@@ -52,11 +53,6 @@ class YearningState(State):
     def __init__(self):
         super().__init__((222, 49, 99)) # pink
         self.direction=None
-
-    
-    # Intent Multiplier 
-    def getIntentToAgentMultiplier(self):
-        return 1
 
     # Speed multiplier
     def getSpeedMultiplier(self):

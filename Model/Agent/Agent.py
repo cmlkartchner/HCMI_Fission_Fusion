@@ -124,8 +124,11 @@ class Agent:
                             q,r = self.get_step_to_target(agent.hex)
                             q,r = q-self.hex.q, r-self.hex.r
 
-                            intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
-                            intent*=self.state.getIntentToAgentMultiplier()
+                            if isinstance(self.state, YearningState):
+                                intent = 1
+                            else:
+                                intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
+                                intent*=self.state.getIntentToAgentMultiplier()
 
                             decisionVectors.append((q,r,intent))
 
