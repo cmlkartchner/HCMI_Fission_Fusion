@@ -116,7 +116,7 @@ class Agent:
                             decisionVectors.append((q,r,intent))
         
         # Agent will look for other agents if it's in exploreState for more than 10s or if it's in groupState or predatorState or YearningState
-        if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState) or (isinstance(self.state, YearningState) and self.state.direction==None):
+        if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState) or isinstance(self.state, YearningState):
             if reading.agents:
                 for agents in reading.agents.values():
                     for agent in agents:
@@ -132,8 +132,8 @@ class Agent:
 
                             decisionVectors.append((q,r,intent))
 
-        if (isinstance(self.state, YearningState) or isinstance(self.state, RebelState)) and self.state.direction:
-            q,r = random.choice(self.state.direction)
+        if isinstance(self.state, RebelState) and self.state.direction:
+            q,r = self.state.direction
             decisionVectors.append((q,r,1))
         
         return decisionVectors 

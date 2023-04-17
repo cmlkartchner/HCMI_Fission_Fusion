@@ -52,20 +52,18 @@ class ExploreState(State):
 
 class YearningState(State):
     def __init__(self):
-        super().__init__((222, 49, 99)) # pink
-        self.direction=None
+        super().__init__((255, 0, 255)) # pink
 
     # Speed multiplier
     def getSpeedMultiplier(self):
         return 2
 
-    def setDirection(self,direction):
-        self.direction=direction
-
 class RebelState(State):
     def __init__(self):
-        super().__init__((255, 95, 31)) # orange
+        super().__init__((112, 41, 99)) # red
         self.direction=None
+
+        # Agent will stay in this state for anywhere between 4 to 10s 
         self.tiredTimer = random.randint(4, 10)
 
     # Speed multiplier
@@ -76,6 +74,7 @@ class RebelState(State):
         self.direction=direction
     
 
+# Not implemented
 class PredatorState(State):
     def __init__(self):
         super().__init__((210, 43, 43)) # red
