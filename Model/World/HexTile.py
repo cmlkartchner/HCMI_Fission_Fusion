@@ -126,7 +126,7 @@ class HexTile:
         total_intensity+=1
 
         # Dividing 255 by how long can a trail can extend
-        multiplier = 255//self.max_intensity
+        # multiplier = 255//self.max_intensity
 
         blue_value = total_intensity * 42
         color = (0, 0, blue_value)

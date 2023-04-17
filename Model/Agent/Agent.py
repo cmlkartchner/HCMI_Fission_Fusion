@@ -1,6 +1,6 @@
 import random
 import time
-from .State import GroupState, ExploreState, PredatorState, State, YearningState
+from .State import GroupState, ExploreState, PredatorState, RebelState, State, YearningState
 
 class Agent:
     def __init__(self, id, hex, memory, attractionCoefficient, pheromone_strength=10, health=100, movement_speed=1):
@@ -132,7 +132,7 @@ class Agent:
 
                             decisionVectors.append((q,r,intent))
 
-        if isinstance(self.state, YearningState) and self.state.direction:
+        if (isinstance(self.state, YearningState) or isinstance(self.state, RebelState)) and self.state.direction:
             q,r = random.choice(self.state.direction)
             decisionVectors.append((q,r,1))
         
@@ -155,11 +155,11 @@ class Agent:
                 self.add_to_memory(self.hex.site.quality)
                 self.observer.notify(self)
                 
-                value, location, timestamp = self.memory.get_most_recent()
+                location, value, timestamp = self.memory.get_most_recent()
                 for agents in self.nearby_agents.values():
                     for agent in agents:
                         agent.add_to_memory(value, location, timestamp)
-
+                        
     def add_to_memory(self, value, location=None, timestamp=None):
         if location is None:
             location = (self.hex.q, self.hex.r)

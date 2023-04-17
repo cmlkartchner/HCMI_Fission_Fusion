@@ -1,4 +1,5 @@
-from Model.Agent.State import ExploreState, GroupState, State, YearningState
+import random
+from Model.Agent.State import ExploreState, GroupState, RebelState, State, YearningState
 from . import AgentBuilder
 from Model.AgentEngine.SensorReading import SensorReading
 
@@ -41,21 +42,44 @@ class AgentEngine:
 
     
     def setStateBehavior(self, agent):
+
+        directionGroups = [[(1,-1), (1,0)], [(-1,1), (0,1)], [(0,-1), (1,0)]]
         #Identifying agents in comfort radius to determine if state change is possible
         reading = self.grid.get_rDistance_reading(agent.hex, agent.comfort_radius, SensorReading())
         if not reading.agents and isinstance(agent.state, GroupState):
             agent.setState(ExploreState())
+
+        elif isinstance(agent.state, GroupState) and reading.agents and agent.state.timer>agent.state.lethargyTimer:
+            rebelFlag = True
+            for otherAgent in self.agents:
+                if not otherAgent==agent and isinstance(otherAgent.state, RebelState):
+                    rebelFlag = False
+                    break
+            
+            # introducing some randomness to the rebelState
+            if rebelFlag and random.random() < 0.1:
+                agent.setState(RebelState())
+                agent.state.setDirection(random.choice(directionGroups))
+
+        elif isinstance(agent.state, RebelState) and agent.state.timer>=agent.state.tiredTimer:
+            agent.setState(ExploreState())
+
         
         elif reading.agents and isinstance(agent.state, ExploreState):
             if agent.state.timer>=20:
                 agent.setState(GroupState())
+
+                # communicating the three most recent sites the agent has visited to other agents
+                comms = agent.memory.get_n_most_recent(3)
+                for otherAgents in reading.agents.values():
+                    for otherAgent in otherAgents:
+                        for location, value, timestamp in comms:
+                            otherAgent.add_to_memory(value, location, timestamp)
       
         elif not reading.agents and isinstance(agent.state, ExploreState) and agent.state.timer>=agent.state.exploreTimer:
             agent.cached_state = agent.state
             agent.setState(YearningState())
             print("Agent ", agent.id, "changed from explore state to yearning state")
-
-            directionGroups = [[(1,-1), (1,0)], [(-1,1), (0,1)], [(0,-1), (1,0)]]
 
             reading = SensorReading()
             for a in self.agents:

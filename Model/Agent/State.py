@@ -1,4 +1,5 @@
 import math
+import random
 
 
 class State:
@@ -12,6 +13,7 @@ class State:
 class GroupState(State):
     def __init__(self):
         super().__init__((30,144,255)) # blue
+        self.lethargyTimer=10
     
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
@@ -32,7 +34,6 @@ class ExploreState(State):
     # Intent Multiplier 
     def getIntentToAgentMultiplier(self):
         if self.timer>self.inflection:
-        # Intent to agent Multiplier is a parabolic curve with a minima at timer=10
             return -5*((self.inflection-self.timer)/self.timer)
 
     def getIntentToTrailMultiplier(self):
@@ -53,6 +54,19 @@ class YearningState(State):
     def __init__(self):
         super().__init__((222, 49, 99)) # pink
         self.direction=None
+
+    # Speed multiplier
+    def getSpeedMultiplier(self):
+        return 2
+
+    def setDirection(self,direction):
+        self.direction=direction
+
+class RebelState(State):
+    def __init__(self):
+        super().__init__((255, 95, 31)) # orange
+        self.direction=None
+        self.tiredTimer = random.randint(4, 10)
 
     # Speed multiplier
     def getSpeedMultiplier(self):
