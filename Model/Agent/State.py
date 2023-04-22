@@ -35,10 +35,14 @@ class ExploreState(State):
     def getIntentToAgentMultiplier(self):
         if self.timer>self.inflection:
             return -5*((self.inflection-self.timer)/self.timer)
+        else:
+            return 0
 
     def getIntentToTrailMultiplier(self):
         if self.timer>self.inflection:
             return -2*((self.inflection-self.timer)/self.timer)
+        else:
+            return 0
 
     def getIntentToSiteMultiplier(self):
 
