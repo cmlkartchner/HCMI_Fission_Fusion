@@ -1,7 +1,8 @@
 import math
 import random
 
-
+# NOTES TO SELF: looks like every state has a getSpeedMultiplier
+# other methods for each state are at least somewhat unique to that state
 class State:
     def __init__(self, color):
         self.color = color

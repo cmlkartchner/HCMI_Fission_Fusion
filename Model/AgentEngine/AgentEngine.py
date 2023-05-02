@@ -3,6 +3,11 @@ from Model.Agent.State import ExploreState, GroupState, RebelState, State, Yearn
 from . import AgentBuilder
 from Model.AgentEngine.SensorReading import SensorReading
 
+# NOTE TO SELF: The AgentEngine class is what does decision-making n tandem with
+# Agent. AgentEngine seems like a blackboard (possible tie-in to BTs?).
+# Do we want to make the states follow the state pattern?
+# Would have to rewrite AgentEngine... aka have the decision-making within the State classes themselves
+
 class AgentEngine:
 
     def __init__(self, world, numAgents):
@@ -45,7 +50,7 @@ class AgentEngine:
         reading = self.grid.get_rDistance_reading(agent.hex, agent.communication_radius, SensorReading())
         agent.set_nearby_agents(reading.agents)
 
-    
+    """Changes the state of an agent. Includes transition logic for the states."""
     def setStateBehavior(self, agent):
 
         directions = [(1,-1), (1,0), (-1,1), (0,1), (0,-1), (1,0)]
