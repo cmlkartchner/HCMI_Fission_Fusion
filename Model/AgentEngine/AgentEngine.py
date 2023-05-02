@@ -30,6 +30,7 @@ class AgentEngine:
 
                 #Identifying objects in sensing radius to determine intent
 
+                # NOTE: part of state behavior
                 if not isinstance(agent.state, YearningState):
                     reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
                 
