@@ -1,2 +1,4 @@
 # SwarmFissionFusion
-Studying Fission-Fusion behaviour in robotic swarms 
+
+Studying Fission-Fusion behavior in robotic swarms
+This is Hannah's branch
