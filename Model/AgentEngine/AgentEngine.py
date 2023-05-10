@@ -38,6 +38,7 @@ class AgentEngine:
                 # Identifying objects in sensing radius to determine intent
 
                 # NOTE: part of state behavior
+                # as long as it's not yearning
                 if not isinstance(agent.state, YearningState):
                     reading = self.grid.get_rDistance_reading(
                         agent.hex, agent.sensing_radius, SensorReading())
@@ -51,7 +52,7 @@ class AgentEngine:
 
                 # For the agent to keep track of time spent in state
                 agent.state.update(self.move_timers[agent])
-                self.move_timers[agent] = 0
+                self.move_timers[agent] = 0  # reset the timer
 
     def notify(self, agent):
 
