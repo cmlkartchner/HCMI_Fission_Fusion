@@ -5,6 +5,7 @@ class AgentMemoryTimedDict:
     def __init__(self, expiry_time):
         self.expiry_time = expiry_time
         self.data = OrderedDict()
+        self.best_site = None
 
     def get(self, key):
         self.cleanup()
@@ -26,6 +27,12 @@ class AgentMemoryTimedDict:
     def get_most_recent(self):
         return self.get_n_most_recent(1)[0]
     
+    # USED FOR BEST-OF-N AGENTS
+    def get_best_site(self):
+        return self.best_site
+
+    def set_best_site(self, site):
+        self.best_site = site
 
     def cleanup(self):
         

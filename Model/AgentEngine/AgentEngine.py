@@ -26,23 +26,20 @@ class AgentEngine:
             # Agent should only move if enough time has passed since the last update
             if self.move_timers[agent] >= 1000/agent.getMovementSpeed():
 
-                self.setStateBehavior(agent)
+                # self.setStateBehavior(agent)
 
-                #Identifying objects in sensing radius to determine intent
+                # Identifying objects in sensing radius to determine intent;
+                # dependent on state
+                # NOTE: YearningState would call self.getAllAgentsInReading()
+                reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
 
-                # NOTE: part of state behavior
-                if not isinstance(agent.state, YearningState):
-                    reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
-                
-                else:
-                    reading = self.getAllAgentsInReading()
-
+                # Calculate possible movements and move agent
                 availableMoves = self.grid.get_immediate_neighbors(agent.hex)
                 agent.updateAvailableMoves(availableMoves)
-                agent.move(agent.getIntent(reading))
+                agent.move(agent.getIntent(self.move_timers[agent], reading)) # NOTE: This is where Agent.getIntent is called
 
                 # For the agent to keep track of time spent in state
-                agent.state.update(self.move_timers[agent])
+                # agent.state.update(self.move_timers[agent]) # NOTE: This is where State.update() is called, dt passed in is self.move_timers[agent]
                 self.move_timers[agent] = 0
     
     def notify(self, agent):
@@ -52,13 +49,16 @@ class AgentEngine:
         agent.set_nearby_agents(reading.agents)
 
     """Changes the state of an agent. Includes transition logic for the states."""
+    # TODO: put transition logic in the states themselves
     def setStateBehavior(self, agent):
 
         directions = [(1,-1), (1,0), (-1,1), (0,1), (0,-1), (1,0)]
         #Identifying agents in comfort radius to determine if state change is possible
         reading = self.grid.get_rDistance_reading(agent.hex, agent.comfort_radius, SensorReading())
+
+        # STATE TRANSITIONS
         if not reading.agents and isinstance(agent.state, GroupState):
-            agent.setState(ExploreState())
+            agent.setState(ExploreState(agent))
 
         elif isinstance(agent.state, GroupState) and reading.agents and agent.state.timer>agent.state.lethargyTimer:
             rebelFlag = True
@@ -73,7 +73,7 @@ class AgentEngine:
                 agent.state.setDirection(random.choice(directions))
 
         elif isinstance(agent.state, RebelState) and agent.state.timer>=agent.state.tiredTimer:
-            agent.setState(ExploreState())
+            agent.setState(ExploreState(agent))
 
         
         elif reading.agents and isinstance(agent.state, ExploreState):

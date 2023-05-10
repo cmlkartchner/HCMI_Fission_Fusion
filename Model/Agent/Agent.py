@@ -11,7 +11,8 @@ class Agent:
         
         self.hex=hex
 
-        self.state = GroupState()
+        self.state = ExploreState(self)
+        self.state_threshold = 20
         self.sensing_radius = 20
         self.communication_radius = 40
         self.comfort_radius = 5
@@ -48,22 +49,25 @@ class Agent:
             hex.setColour(hex.site.siteColour)
 
 
-    #Agent's Sensor reading is used to update decision vectors
-    def getIntent(self, reading):
-        decisionVectors = self.getDecisionVectors(reading)
+    """Determines direction the agent will move in depending on its state and the reading it gets"""
+    # Agent's Sensor reading is used to update decision vectors
+    def getIntent(self, dt, reading):
+        decisionVectors = self.getDecisionVectors(dt, reading)
         if decisionVectors:
             sum_q,sum_r,sum_intent = 0,0,0
-            for (q,r,intent) in decisionVectors:
-                sum_q+=q*intent
-                sum_r+=r*intent
-                sum_intent+=intent
-            
-            if sum_intent:
-                q, r = round(sum_q/sum_intent), round(sum_r/sum_intent)
-                if q==0 and r==0:
+            for vector in decisionVectors:
+                for (q,r,intent) in vector:
+                    # DEBUG: both intent and q are tuples
+                    sum_q += q*intent
+                    sum_r += r*intent
+                    sum_intent += intent
+                
+                if sum_intent:
+                    q, r = round(sum_q/sum_intent), round(sum_r/sum_intent)
+                    if q==0 and r==0:
+                        q,r = self.getRandomDirection()
+                else:
                     q,r = self.getRandomDirection()
-            else:
-                q,r = self.getRandomDirection()
         else:
             q,r = self.getRandomDirection()
 
@@ -75,66 +79,69 @@ class Agent:
         else:
             return random.choice(list(self.possible_moves.values()))
     
-    def getDecisionVectors(self, reading):
-        decisionVectors = []
+    """State behavior is programmed here"""
+    # TODO: move behavior into states
+    def getDecisionVectors(self, dt, reading):
+        decisionVectors = self.state.update(dt, reading)
+        # decisionVectors = []
         
-        # Agent will look for trails only if it's in exploreState for more than 10s or if it's in predatorState
-        if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state,PredatorState):
-            if reading.trails:
-                for trailHex in reading.trails.values():
-                    if self.hex.computeDistance(trailHex):
-                        q,r = self.get_step_to_target(trailHex)
-                        # getting hex's relative position to self.hex
-                        q,r = q-self.hex.q, r-self.hex.r
+        # # Agent will look for trails only if it's in exploreState for more than 10s or if it's in predatorState
+        # if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state,PredatorState):
+        #     if reading.trails:
+        #         for trailHex in reading.trails.values():
+        #             if self.hex.computeDistance(trailHex):
+        #                 q,r = self.get_step_to_target(trailHex)
+        #                 # getting hex's relative position to self.hex
+        #                 q,r = q-self.hex.q, r-self.hex.r
 
-                        total_pheromone_strength=0
-                        for item in trailHex.trail:
-                            id, pheromone_strength, timer, sacredTimer = item
-                            if id!=self.id:
-                                total_pheromone_strength += pheromone_strength
+        #                 total_pheromone_strength=0
+        #                 for item in trailHex.trail:
+        #                     id, pheromone_strength, timer, sacredTimer = item
+        #                     if id!=self.id:
+        #                         total_pheromone_strength += pheromone_strength
                         
-                        total_pheromone_strength/=1000
-                        intent = total_pheromone_strength/(self.hex.computeDistance(trailHex))**2
-                        intent*=self.state.getIntentToTrailMultiplier()
+        #                 total_pheromone_strength/=1000
+        #                 intent = total_pheromone_strength/(self.hex.computeDistance(trailHex))**2
+        #                 intent*=self.state.getIntentToTrailMultiplier()
                         
-                        decisionVectors.append((q,r,intent))
+        #                 decisionVectors.append((q,r,intent))
 
-        # Agent will look for sites only if it's in exploreState or groupState
-        if isinstance(self.state, ExploreState) or isinstance(self.state, GroupState): 
-            if reading.sites:
-                for loc in reading.sites.keys():
-                    if not self.memory.contains(loc):
-                        site = reading.sites[loc]
+        # # Agent will look for sites only if it's in exploreState or groupState
+        # if isinstance(self.state, ExploreState) or isinstance(self.state, GroupState): 
+        #     if reading.sites:
+        #         for loc in reading.sites.keys():
+        #             if not self.memory.contains(loc):
+        #                 site = reading.sites[loc]
 
-                        if self.hex.computeDistance(site.hex):
-                            q,r = self.get_step_to_target(site.hex)
-                            q,r = q-self.hex.q, r-self.hex.r
+        #                 if self.hex.computeDistance(site.hex):
+        #                     q,r = self.get_step_to_target(site.hex)
+        #                     q,r = q-self.hex.q, r-self.hex.r
 
-                            intent = site.quality/(self.hex.computeDistance(site.hex))**2
-                            intent*=self.state.getIntentToSiteMultiplier()
+        #                     intent = site.quality/(self.hex.computeDistance(site.hex))**2
+        #                     intent*=self.state.getIntentToSiteMultiplier()
 
-                            decisionVectors.append((q,r,intent))
+        #                     decisionVectors.append((q,r,intent))
         
-        # Agent will look for other agents if it's in exploreState for more than 10s or if it's in groupState or predatorState or YearningState
-        if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState) or isinstance(self.state, YearningState):
-            if reading.agents:
-                for agents in reading.agents.values():
-                    for agent in agents:
-                        if self.hex.computeDistance(agent.hex):
-                            q,r = self.get_step_to_target(agent.hex)
-                            q,r = q-self.hex.q, r-self.hex.r
+        # # Agent will look for other agents if it's in exploreState for more than 10s or if it's in groupState or predatorState or YearningState
+        # if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState) or isinstance(self.state, YearningState):
+        #     if reading.agents:
+        #         for agents in reading.agents.values():
+        #             for agent in agents:
+        #                 if self.hex.computeDistance(agent.hex):
+        #                     q,r = self.get_step_to_target(agent.hex)
+        #                     q,r = q-self.hex.q, r-self.hex.r
 
-                            if isinstance(self.state, YearningState):
-                                intent = 1
-                            else:
-                                intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
-                                intent*=self.state.getIntentToAgentMultiplier()
+        #                     if isinstance(self.state, YearningState):
+        #                         intent = 1
+        #                     else:
+        #                         intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
+        #                         intent*=self.state.getIntentToAgentMultiplier()
 
-                            decisionVectors.append((q,r,intent))
+        #                     decisionVectors.append((q,r,intent))
 
-        if isinstance(self.state, RebelState) and self.state.direction:
-            q,r = self.state.direction
-            decisionVectors.append((q,r,1))
+        # if isinstance(self.state, RebelState) and self.state.direction:
+        #     q,r = self.state.direction
+        #     decisionVectors.append((q,r,1))
         
         return decisionVectors 
     
