@@ -12,6 +12,6 @@ def build(numAgents,grid):
 
     for i in range(numAgents):
         memory = AgentMemoryTimedDict(20)
-        agent = Agent(i,hexes[i],memory, 0.1/numAgents)
+        agent = Agent(i, hexes[i], hexes[0], memory, 0.1/numAgents)
         agents.append(agent)
     return agents

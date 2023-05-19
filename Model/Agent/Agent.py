@@ -3,13 +3,14 @@ import time
 from .State import GroupState, ExploreState, PredatorState, RebelState, State, YearningState
 
 class Agent:
-    def __init__(self, id, hex, memory, attractionCoefficient, pheromone_strength=10, health=100, movement_speed=1):
+    def __init__(self, id, hex, hub, memory, attractionCoefficient, pheromone_strength=10, health=100, movement_speed=1):
         self.id = id
         self.health = health
         self.movement_speed = movement_speed
         self.attractionCoefficient = attractionCoefficient
         
         self.hex=hex
+        self.hub = hub
 
         self.state = ExploreState(self)
         self.state_threshold = 20

@@ -18,7 +18,7 @@ class State:
     """Calculates a decision vector based on pheromone trail finding.
        trails: a vector of HexTiles
        returns a vector of ints (or floats?)"""
-    def findTrail(self, trails):
+    def findTrails(self, trails):
         decisionVectors = []
         if trails:
             for trailHex in trails.values():
@@ -43,7 +43,7 @@ class State:
     """Calculates a decision vector based on site finding.
         sites: a vector of Sites
         returns a vector of ints"""
-    def findSite(self, sites):
+    def findSites(self, sites):
         decisionVectors = []
         if sites:
             for loc in sites.keys():
@@ -101,29 +101,19 @@ class GroupState(State):
 
 class ExploreState(State):
     def __init__(self, agent):
-        super().__init__((253, 218, 13), agent) # yellow
+        super().__init__((255, 0, 255), agent) # pink
         self.inflection = 20
         self.exploreTimer = 40
 
+    # TODO: change to have the transitions discussed in meeting
     def update(self, dt, reading):
         super().update(dt)
         decisionVectors = []
-        decisionVectors.append(super().findTrail(reading.trails))
+        decisionVectors.append(super().findTrails(reading.trails))
 
         if reading.sites and self.timer > self.agent.state_threshold:
-            # TODO: minor thing but fix the assess transition to activate when the agent arrives at a site
-            decisionVectors.append(super().findSite(reading.sites))
-            self.agent.setState(CanvasState(self.agent))
-        
-        elif reading.agents:
-            decisionVectors.append(super().findNeighbors(reading.agents))
-            for agents in reading.agents.values():
-                for agent in agents:
-                    if isinstance(agent.state, CanvasState) or isinstance(agent.state, LeadingState):
-                        siteToConsider = agent.memory.best_site
-                        if siteToConsider.quality > self.agent.best_site.quality:
-                            self.agent.target_agent = agent
-                            self.agent.setState(FollowState(self.agent))
+            decisionVectors.append(super().findSites(reading.sites))
+            self.agent.setState(DanceState(self.agent))
 
         return decisionVectors
     
@@ -145,7 +135,6 @@ class ExploreState(State):
         # intent to site Multiplier follows exponential decay
         return 0.9 * math.exp(-0.2 * self.timer) + 1.1
     
-    # Speed multiplier
     def getSpeedMultiplier(self):
         return 2
 
@@ -188,25 +177,56 @@ class PredatorState(State):
 
 ########## BEST-OF-N STATES ##########
 # NOTE: we'll use the base ExploreState haha
-# TODO: implement Assess and Canvas states first. The transition to the Carry states can be filled with Explore state for now;
 
-class CanvasState(State):
+class RestState(State):
     def __init__(self, agent):
         super().__init__((30, 144, 255), agent) # blue
 
     def update(self, dt, reading):
         super().update(dt)
         decisionVectors = []
-        decisionVectors.append(super().findTrail(reading.trails))
+        decisionVectors.append(super().findNeighbors(reading.agents))
+        # Stay stationary at hub
+        # observe dances, probabilistically transition to Travel_Assess state
+        # probabilistically transition to Explore
+        return decisionVectors
+
+    # Intent Multiplier 
+    def getIntentToAgentMultiplier(self):
+        return 0
+
+    def getIntentToTrailMultiplier(self):
+        return 0
+
+    def getIntentToSiteMultiplier(self):
+        return 0
+    
+    def getSpeedMultiplier(self):
+        return 0
+
+class AssessState(State):
+    def __init__(self, agent):
+        super().__init__((253, 218, 13), agent) # yellow
+
+    def update(self, dt, reading):
+        super().update(dt)
+        decisionVectors = []
+        # stay stationary at site to simulate gathering data
+        # after a certain amount of time, transition to Travel_Hub_Dance state
+        return decisionVectors
+
+class DanceState(State): # TODO: change to follow state machine changes discussed in meeting
+    def __init__(self, agent):
+        super().__init__((112, 41, 99), agent) # purple
+
+    def update(self, dt, reading):
+        super().update(dt)
+        decisionVectors = []
+        decisionVectors.append(super().findTrails(reading.trails))
         decisionVectors.append(super().findNeighbors(reading.agents))
         # TODO: implement state behavior, return decisionVector
         if self.timer < self.agent.state_threshold:
-            if reading.agents:
-                for agents in reading.agents.values():
-                    for agent in agents:
-                        if isinstance(agent.state, FollowState):
-                            self.agent.setState(LeadingState(self.agent))
-                            break
+            pass
         else:
             self.agent.setState(ExploreState(self.agent))
         return decisionVectors
@@ -222,48 +242,118 @@ class CanvasState(State):
     
     def getSpeedMultiplier(self):
         return 2
-
-class LeadingState(State):
+    
+class QuorumState(State):
     def __init__(self, agent):
-        super().__init__((112, 41, 99), agent) # red
-
+        super().__init__((0, 255, 0), agent) # green
+    
     def update(self, dt, reading):
         super().update(dt)
-        # TODO: implement state behavior, return decisionVector
-        # move toward target neighbor
-        # if arrived:
-        #   transition to AssessState
-        # if getLost:
-        #   transition to ExploreState
-
+        decisionVectors = []
+        # travel to new site
+        # stay stationary at new site
+        return decisionVectors
+    
+    def getIntentToSiteMultiplier(self): # NOTE: if things wig out, look at multipliers
+        return 0
+    
     def getIntentToAgentMultiplier(self):
-        return 1
+        return 0
 
     def getIntentToTrailMultiplier(self):
-        return 1
+        return 0
     
     def getSpeedMultiplier(self):
         return 2
 
-class FollowState(State):
-    def __init__(self, agent):
-        super().__init__((255, 0, 255), agent) # green
+class TiredState(State): # return to hub from explore state
+    def __init__(self, color, agent):
+        super().__init__((255, 0, 0), agent) # red
 
     def update(self, dt, reading):
         super().update(dt)
-        # TODO: implement state behavior, return decisionVector
-        # move toward target site
-        # if arrived:
-        #   transition to ExploreState
-        # if lostNeighbor:
-        #   transition to CanvasState
+        decisionVectors = []
+        # if at hub, transition to resting state
+        # else, travel to hub
+        return decisionVectors
 
+    def getIntentToSiteMultiplier(self):
+        return 0
+    
     def getIntentToAgentMultiplier(self):
-        return 1
+        return 0
 
     def getIntentToTrailMultiplier(self):
-        return 1
+        return 0
+    
+    def getSpeedMultiplier(self):
+        return 2
+
+class TravelAssessState(State):
+    def __init__(self, agent):
+        super().__init__((255, 255, 0), agent) # yellow but brighter i think
+
+    def update(self, dt, reading):
+        super().update(dt)
+        decisionVectors = []
+        # if at site, transition to AssessState
+        # else, travel to site
+        return decisionVectors
+    
+    def getIntentToSiteMultiplier(self):
+        return 0
+    
+    def getIntentToAgentMultiplier(self):
+        return 0
+
+    def getIntentToTrailMultiplier(self):
+        return 0
+    
+    def getSpeedMultiplier(self):
+        return 2
+
+class TravelToDanceState(State):
+    def __init__(self, agent):
+        super().__init__((255, 0, 255), agent)
+
+    def update(self, dt, reading):
+        super().update(dt)
+        decisionVectors = []
+        # if at hub, transition to Dance state
+        # else, travel to hub
+        return decisionVectors
+
+    def getIntentToSiteMultiplier(self):
+        return 0
+    
+    def getIntentToAgentMultiplier(self):
+        return 0
+
+    def getIntentToTrailMultiplier(self):
+        return 0
     
     def getSpeedMultiplier(self):
         return 2
     
+class TravelToSiteState(State):
+    def __init__(self, agent):
+        super().__init__((255, 0, 127), agent)
+
+    def update(self, dt, reading):
+        super().update(dt)
+        decisionVectors = []
+        # if at site, transition to Assess state
+        # else, travel to site
+        return decisionVectors
+    
+    def getIntentToSiteMultiplier(self):
+        return 0
+    
+    def getIntentToAgentMultiplier(self):
+        return 0
+
+    def getIntentToTrailMultiplier(self):
+        return 0
+    
+    def getSpeedMultiplier(self):
+        return 2
