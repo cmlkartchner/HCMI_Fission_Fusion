@@ -9,7 +9,7 @@ class Agent:
         self.movement_speed = movement_speed
         self.attractionCoefficient = attractionCoefficient
         
-        self.hex=hex
+        self.hex = hex
         self.hub = hub
 
         self.state = ExploreState(self)

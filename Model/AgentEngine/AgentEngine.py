@@ -42,54 +42,6 @@ class AgentEngine:
         #Identifying agents in communication radius
         reading = self.grid.get_rDistance_reading(agent.hex, agent.communication_radius, SensorReading())
         agent.set_nearby_agents(reading.agents)
-
-    """Changes the state of an agent. Includes transition logic for the states."""
-    def setStateBehavior(self, agent):
-
-        directions = [(1,-1), (1,0), (-1,1), (0,1), (0,-1), (1,0)]
-        #Identifying agents in comfort radius to determine if state change is possible
-        reading = self.grid.get_rDistance_reading(agent.hex, agent.comfort_radius, SensorReading())
-
-        # STATE TRANSITIONS
-        if not reading.agents and isinstance(agent.state, GroupState):
-            agent.setState(ExploreState(agent))
-
-        elif isinstance(agent.state, GroupState) and reading.agents and agent.state.timer>agent.state.lethargyTimer:
-            rebelFlag = True
-            for otherAgent in self.agents:
-                if not otherAgent==agent and isinstance(otherAgent.state, RebelState):
-                    rebelFlag = False
-                    break
-            
-            # introducing some randomness to the rebelState
-            if rebelFlag and random.random() < 0.01:
-                agent.setState(RebelState())
-                agent.state.setDirection(random.choice(directions))
-
-        elif isinstance(agent.state, RebelState) and agent.state.timer>=agent.state.tiredTimer:
-            agent.setState(ExploreState(agent))
-
-        
-        elif reading.agents and isinstance(agent.state, ExploreState):
-            if agent.state.timer>=20:
-                agent.setState(GroupState())
-
-                # NOTE: communicating the three most recent sites the agent has visited to other agents
-                comms = agent.memory.get_n_most_recent(3)
-                for otherAgents in reading.agents.values():
-                    for otherAgent in otherAgents:
-                        for location, value, timestamp in comms:
-                            otherAgent.add_to_memory(value, location, timestamp)
-      
-        elif not reading.agents and isinstance(agent.state, ExploreState) and agent.state.timer>=agent.state.exploreTimer:
-            agent.cached_state = agent.state
-            agent.setState(YearningState())
-
-        elif isinstance(agent.state, YearningState):
-            reading = self.grid.get_rDistance_reading(agent.hex, agent.sensing_radius, SensorReading())
-            if reading.agents:
-                agent.cached_state.exploreTimer+=agent.cached_state.exploreTimer
-                agent.setState(agent.cached_state)
     
 
     def getAllAgentsInReading(self):

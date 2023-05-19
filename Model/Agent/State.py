@@ -1,8 +1,5 @@
 import math
-import random
-
-# NOTES TO SELF: looks like every state has a getSpeedMultiplier
-# other methods for each state are at least somewhat unique to that state
+import numpy.random as random
 
 class State:
     def __init__(self, color, agent):
@@ -14,10 +11,17 @@ class State:
        dt: an int indicating how many milliseconds have passed"""
     def update(self, dt):
         self.timer += dt/1000   # to convert dt to seconds
+    
+    def goToSite(self, site):
+        decisionVector = []
+        q,r = self.agent.get_step_to_target(site)
+        intent = 1
+        decisionVector.append((q, r, intent))
+        return decisionVector
 
     """Calculates a decision vector based on pheromone trail finding.
        trails: a vector of HexTiles
-       returns a vector of ints (or floats?)"""
+       returns a vector of tuples of ints"""
     def findTrails(self, trails):
         decisionVectors = []
         if trails:
@@ -42,7 +46,7 @@ class State:
 
     """Calculates a decision vector based on site finding.
         sites: a vector of Sites
-        returns a vector of ints"""
+        returns a vector of tuples of ints"""
     def findSites(self, sites):
         decisionVectors = []
         if sites:
@@ -68,7 +72,7 @@ class State:
 
     """Calculates a decision vector based on finding neighbor agents.
         agents: a vector of Agents
-        returns a vector of ints"""
+        returns a vector of tuples of ints"""
     def findNeighbors(self, agents):
         decisionVectors = []
         if agents:
@@ -110,10 +114,10 @@ class ExploreState(State):
         super().update(dt)
         decisionVectors = []
         decisionVectors.append(super().findTrails(reading.trails))
+        decisionVectors.append(super().findSites(reading.sites))
 
-        if reading.sites and self.timer > self.agent.state_threshold:
-            decisionVectors.append(super().findSites(reading.sites))
-            self.agent.setState(DanceState(self.agent))
+        if self.timer > self.agent.state_threshold:
+            self.agent.setState(TiredState(self.agent))
 
         return decisionVectors
     
@@ -185,10 +189,13 @@ class RestState(State):
     def update(self, dt, reading):
         super().update(dt)
         decisionVectors = []
-        decisionVectors.append(super().findNeighbors(reading.agents))
         # Stay stationary at hub
+        if self.agent.hex != self.agent.hub:
+            decisionVectors.append(super().goToSite(self.agent.hub))
         # observe dances, probabilistically transition to Travel_Assess state
         # probabilistically transition to Explore
+        if random.default_rng().exponential() > self.agent.state_threshold:
+            self.agent.setState(ExploreState(self.agent))
         return decisionVectors
 
     # Intent Multiplier 
@@ -202,7 +209,7 @@ class RestState(State):
         return 0
     
     def getSpeedMultiplier(self):
-        return 0
+        return 1
 
 class AssessState(State):
     def __init__(self, agent):
@@ -267,14 +274,17 @@ class QuorumState(State):
         return 2
 
 class TiredState(State): # return to hub from explore state
-    def __init__(self, color, agent):
+    def __init__(self, agent):
         super().__init__((255, 0, 0), agent) # red
 
     def update(self, dt, reading):
         super().update(dt)
         decisionVectors = []
         # if at hub, transition to resting state
-        # else, travel to hub
+        if self.agent.hex == self.agent.hub:
+            self.agent.setState(RestState(self.agent))
+        else:
+            decisionVectors.append(super().goToSite(self.agent.hub))
         return decisionVectors
 
     def getIntentToSiteMultiplier(self):
@@ -291,7 +301,7 @@ class TiredState(State): # return to hub from explore state
 
 class TravelAssessState(State):
     def __init__(self, agent):
-        super().__init__((255, 255, 0), agent) # yellow but brighter i think
+        super().__init__((255, 255, 0), agent) # yellow but brighter
 
     def update(self, dt, reading):
         super().update(dt)
