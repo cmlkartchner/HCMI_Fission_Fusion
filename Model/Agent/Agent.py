@@ -1,6 +1,8 @@
 import random
 import time
-from .State import GroupState, ExploreState, PredatorState, RebelState, State, YearningState
+import numpy
+import pygame
+from State import GroupState, ExploreState, PredatorState, RebelState, State, YearningState
 
 class Agent:
     def __init__(self, id, hex, memory, attractionCoefficient, pheromone_strength=10, health=100, movement_speed=1):
@@ -9,6 +11,10 @@ class Agent:
         self.movement_speed = movement_speed
         self.attractionCoefficient = attractionCoefficient
         
+        self.location = (0,0)
+        self.step = 2
+        self.turn_radius = numpy.pi/2
+
         self.hex=hex
 
         self.state = GroupState()
@@ -27,7 +33,39 @@ class Agent:
 
     def move(self,nextHex):
         self.remove_from_hex(self.hex)
-        self.situate_at_hex(nextHex)        
+        self.situate_at_hex(nextHex) 
+
+        pygame.init()
+        screen = pygame.display.set_mode((800, 600))
+
+        clock = pygame.time.Clock()
+
+        point_position = [400, 300]
+        target_position = [600,400]
+        total_frames = 80
+        current_frame = 0
+
+        for event in pygame.event.get():
+            while event.type != pygame.QUIT:
+                    increment_x = (target_position[0] - point_position[0])/total_frames
+                    increment_y = (target_position[1] - point_position[1])/total_frames
+
+                    point_position[0] += increment_x
+                    point_position[1] += increment_y
+
+            
+                    pygame.draw.circle(screen, (255,0,0), (int(point_position[0]),int(point_position[1])), 10)
+                    pygame.display.flip()
+                    current_frame += 1
+
+                    if current_frame >= total_frames:
+                        break
+
+                    clock.tick(60)
+
+
+            pygame.quit()  
+
 
     def situate_at_hex(self, hex, inspectFlag=True):
         if inspectFlag:
