@@ -5,8 +5,6 @@ from Model.AgentEngine.SensorReading import SensorReading
 
 # NOTE TO SELF: The AgentEngine class is what does decision-making n tandem with
 # Agent. AgentEngine seems like a blackboard (possible tie-in to BTs?).
-# Do we want to make the states follow the state pattern?
-# Would have to rewrite AgentEngine... aka have the decision-making within the State classes themselves
 
 class AgentEngine:
 
@@ -26,8 +24,6 @@ class AgentEngine:
             # Agent should only move if enough time has passed since the last update
             if self.move_timers[agent] >= 1000/agent.getMovementSpeed():
 
-                # self.setStateBehavior(agent)
-
                 # Identifying objects in sensing radius to determine intent;
                 # dependent on state
                 # NOTE: YearningState would call self.getAllAgentsInReading()
@@ -36,10 +32,9 @@ class AgentEngine:
                 # Calculate possible movements and move agent
                 availableMoves = self.grid.get_immediate_neighbors(agent.hex)
                 agent.updateAvailableMoves(availableMoves)
-                agent.move(agent.getIntent(self.move_timers[agent], reading)) # NOTE: This is where Agent.getIntent is called
+                agent.move(agent.getIntent(self.move_timers[agent], reading))
 
                 # For the agent to keep track of time spent in state
-                # agent.state.update(self.move_timers[agent]) # NOTE: This is where State.update() is called, dt passed in is self.move_timers[agent]
                 self.move_timers[agent] = 0
     
     def notify(self, agent):
@@ -49,7 +44,6 @@ class AgentEngine:
         agent.set_nearby_agents(reading.agents)
 
     """Changes the state of an agent. Includes transition logic for the states."""
-    # TODO: put transition logic in the states themselves
     def setStateBehavior(self, agent):
 
         directions = [(1,-1), (1,0), (-1,1), (0,1), (0,-1), (1,0)]
@@ -80,7 +74,7 @@ class AgentEngine:
             if agent.state.timer>=20:
                 agent.setState(GroupState())
 
-                # communicating the three most recent sites the agent has visited to other agents
+                # NOTE: communicating the three most recent sites the agent has visited to other agents
                 comms = agent.memory.get_n_most_recent(3)
                 for otherAgents in reading.agents.values():
                     for otherAgent in otherAgents:

@@ -21,6 +21,9 @@ class Agent:
 
         self.cached_state=None
 
+        ### BEST-OF-N STUFF HERE ###
+        self.target_agent = None
+
         self.situate_at_hex(hex, False)
 
     
@@ -50,14 +53,12 @@ class Agent:
 
 
     """Determines direction the agent will move in depending on its state and the reading it gets"""
-    # Agent's Sensor reading is used to update decision vectors
     def getIntent(self, dt, reading):
         decisionVectors = self.getDecisionVectors(dt, reading)
         if decisionVectors:
             sum_q,sum_r,sum_intent = 0,0,0
             for vector in decisionVectors:
                 for (q,r,intent) in vector:
-                    # DEBUG: both intent and q are tuples
                     sum_q += q*intent
                     sum_r += r*intent
                     sum_intent += intent
@@ -79,70 +80,9 @@ class Agent:
         else:
             return random.choice(list(self.possible_moves.values()))
     
-    """State behavior is programmed here"""
-    # TODO: move behavior into states
+    """Gets the decision vectors depending on the agent's state"""
     def getDecisionVectors(self, dt, reading):
         decisionVectors = self.state.update(dt, reading)
-        # decisionVectors = []
-        
-        # # Agent will look for trails only if it's in exploreState for more than 10s or if it's in predatorState
-        # if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state,PredatorState):
-        #     if reading.trails:
-        #         for trailHex in reading.trails.values():
-        #             if self.hex.computeDistance(trailHex):
-        #                 q,r = self.get_step_to_target(trailHex)
-        #                 # getting hex's relative position to self.hex
-        #                 q,r = q-self.hex.q, r-self.hex.r
-
-        #                 total_pheromone_strength=0
-        #                 for item in trailHex.trail:
-        #                     id, pheromone_strength, timer, sacredTimer = item
-        #                     if id!=self.id:
-        #                         total_pheromone_strength += pheromone_strength
-                        
-        #                 total_pheromone_strength/=1000
-        #                 intent = total_pheromone_strength/(self.hex.computeDistance(trailHex))**2
-        #                 intent*=self.state.getIntentToTrailMultiplier()
-                        
-        #                 decisionVectors.append((q,r,intent))
-
-        # # Agent will look for sites only if it's in exploreState or groupState
-        # if isinstance(self.state, ExploreState) or isinstance(self.state, GroupState): 
-        #     if reading.sites:
-        #         for loc in reading.sites.keys():
-        #             if not self.memory.contains(loc):
-        #                 site = reading.sites[loc]
-
-        #                 if self.hex.computeDistance(site.hex):
-        #                     q,r = self.get_step_to_target(site.hex)
-        #                     q,r = q-self.hex.q, r-self.hex.r
-
-        #                     intent = site.quality/(self.hex.computeDistance(site.hex))**2
-        #                     intent*=self.state.getIntentToSiteMultiplier()
-
-        #                     decisionVectors.append((q,r,intent))
-        
-        # # Agent will look for other agents if it's in exploreState for more than 10s or if it's in groupState or predatorState or YearningState
-        # if (isinstance(self.state, ExploreState) and self.state.timer>self.state.inflection) or isinstance(self.state, GroupState) or isinstance(self.state, PredatorState) or isinstance(self.state, YearningState):
-        #     if reading.agents:
-        #         for agents in reading.agents.values():
-        #             for agent in agents:
-        #                 if self.hex.computeDistance(agent.hex):
-        #                     q,r = self.get_step_to_target(agent.hex)
-        #                     q,r = q-self.hex.q, r-self.hex.r
-
-        #                     if isinstance(self.state, YearningState):
-        #                         intent = 1
-        #                     else:
-        #                         intent = self.getAttractionCoefficient(agent)/(self.hex.computeDistance(agent.hex))**2
-        #                         intent*=self.state.getIntentToAgentMultiplier()
-
-        #                     decisionVectors.append((q,r,intent))
-
-        # if isinstance(self.state, RebelState) and self.state.direction:
-        #     q,r = self.state.direction
-        #     decisionVectors.append((q,r,1))
-        
         return decisionVectors 
     
     def getRandomDirection(self):
@@ -150,12 +90,12 @@ class Agent:
         return random.choice(directions)
 
 
-    #Gets neighboring cells the agent can move to
+    """Gets neighboring cells the agent can move to"""
     def updateAvailableMoves(self, availableMoves):
         self.possible_moves = availableMoves
 
 
-    #Inspects the hex it is currently at and adds its information to memory
+    """Inspects the hex it is currently at and adds its information to memory"""
     def inspect(self):
         if self.hex.site:
             if not self.memory.contains((self.hex.q,self.hex.r)):
@@ -180,7 +120,8 @@ class Agent:
         return self.memory.get(location)
     
 
-    #Gets next hex to move to in order to reach target
+    """Gets next hex to move to in order to reach target
+        target: a HexTile to move to"""
     def get_step_to_target(self, target):
         distance_to_target = self.hex.computeDistance(target)
 
@@ -213,6 +154,18 @@ class Agent:
             round_s = -round_q-round_r
 
         return round_q, round_r, round_s
+    
+    def get_is_leading(self):
+        return self.is_leading
+    
+    def set_is_leading(self, is_leading):
+        self.is_leading = is_leading
+    
+    def get_is_following(self):
+        return self.is_following
+    
+    def set_is_following(self, is_following):
+        self.is_following = is_following
     
     #Calculates the attraction between agents
     def getAttractionCoefficient(self,other):

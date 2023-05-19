@@ -51,10 +51,9 @@ class State:
                     site = sites[loc]
 
                     # NOTE: BEST SITE STUFF IS FOR BEST-OF-N AGENTS
-                    if self.agent.memory.get_best_site() == None:
+                    if self.agent.memory.best_site == None:
                         self.agent.memory.set_best_site(site)
-                    
-                    elif site.getQuality() > self.agent.memory.get_best_site().getQuality():
+                    elif site.getQuality() > self.agent.memory.best_site.getQuality():
                         self.agent.memory.set_best_site(site)
 
                     if self.agent.hex.computeDistance(site.hex):
@@ -110,13 +109,22 @@ class ExploreState(State):
         super().update(dt)
         decisionVectors = []
         decisionVectors.append(super().findTrail(reading.trails))
-        decisionVectors.append(super().findSite(reading.sites))
+
         if reading.sites and self.timer > self.agent.state_threshold:
             # TODO: minor thing but fix the assess transition to activate when the agent arrives at a site
-            self.agent.setState(AssessState(self.agent))
-        # if a neighbor is Canvasing:
-        #   if neighbor.site.quality > self.agent.site.quality:
-        #       transition to CarriedState
+            decisionVectors.append(super().findSite(reading.sites))
+            self.agent.setState(CanvasState(self.agent))
+        
+        elif reading.agents:
+            decisionVectors.append(super().findNeighbors(reading.agents))
+            for agents in reading.agents.values():
+                for agent in agents:
+                    if isinstance(agent.state, CanvasState) or isinstance(agent.state, LeadingState):
+                        siteToConsider = agent.memory.best_site
+                        if siteToConsider.quality > self.agent.best_site.quality:
+                            self.agent.target_agent = agent
+                            self.agent.setState(FollowState(self.agent))
+
         return decisionVectors
     
     # Intent Multiplier 
@@ -180,9 +188,9 @@ class PredatorState(State):
 
 ########## BEST-OF-N STATES ##########
 # NOTE: we'll use the base ExploreState haha
-# TODO: implement Assess and Canvas states first. The transition to the Carry states can be filled with Explore state for now
+# TODO: implement Assess and Canvas states first. The transition to the Carry states can be filled with Explore state for now;
 
-class AssessState(State):
+class CanvasState(State):
     def __init__(self, agent):
         super().__init__((30, 144, 255), agent) # blue
 
@@ -190,57 +198,32 @@ class AssessState(State):
         super().update(dt)
         decisionVectors = []
         decisionVectors.append(super().findTrail(reading.trails))
-        if self.timer < self.agent.state_threshold:
-        #   if close enough to other agents:
-        #       transition to canvasing
-        #   else:
-            decisionVectors.append(super().findNeighbors(reading.agents))
-        else:
-           decisionVectors.append(super().findSite(reading.sites))
-           self.agent.setState(ExploreState(self.agent))
-        return decisionVectors
-    
-    def getIntentToSiteMultiplier(self):
-        return 2
-    
-    def getIntentToAgentMultiplier(self):
-        return 2
-
-    def getIntentToTrailMultiplier(self):
-        return 1
-    
-    def getSpeedMultiplier(self):
-        return 2
-
-class CanvasState(State):
-    def __init__(self, agent):
-        super().__init__((255, 0, 255), agent) # pink
-
-    def update(self, dt, reading):
-        super().update(dt)
+        decisionVectors.append(super().findNeighbors(reading.agents))
         # TODO: implement state behavior, return decisionVector
-        # if foundNeighbors:
-        #   for each neighbor:
-        #       if a neighbor enters CarriedState:
-        #           transition to CarryState
-        #           break
-        #   if enough time has elapsed in this state:
-        #       transition back to ExploreState
-        # keep moving forward toward neighbors
+        if self.timer < self.agent.state_threshold:
+            if reading.agents:
+                for agents in reading.agents.values():
+                    for agent in agents:
+                        if isinstance(agent.state, FollowState):
+                            self.agent.setState(LeadingState(self.agent))
+                            break
+        else:
+            self.agent.setState(ExploreState(self.agent))
+        return decisionVectors
 
     def getIntentToSiteMultiplier(self):
         return 1
     
     def getIntentToAgentMultiplier(self):
-        return 1
+        return 3
 
     def getIntentToTrailMultiplier(self):
-        return 1
+        return 2
     
     def getSpeedMultiplier(self):
         return 2
 
-class CarriedState(State):
+class LeadingState(State):
     def __init__(self, agent):
         super().__init__((112, 41, 99), agent) # red
 
@@ -262,9 +245,9 @@ class CarriedState(State):
     def getSpeedMultiplier(self):
         return 2
 
-class CarryState(State):
+class FollowState(State):
     def __init__(self, agent):
-        super().__init__((0, 255, 0), agent) # green
+        super().__init__((255, 0, 255), agent) # green
 
     def update(self, dt, reading):
         super().update(dt)
